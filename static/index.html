@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CareConnect Voice - Microphone Demo</title>
+  <style>
+    :root {
+      --bg: #effaf7;
+      --card: #ffffff;
+      --text: #102a43;
+      --muted: #627d98;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --danger: #b91c1c;
+      --border: rgba(15, 118, 110, 0.16);
+      --shadow: 0 26px 80px rgba(16, 42, 67, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, .22), transparent 30%),
+        radial-gradient(circle at 88% 18%, rgba(45, 212, 191, .28), transparent 32%),
+        linear-gradient(135deg, var(--bg), #f7fbff);
+    }
+    .app { max-width: 1180px; margin: 0 auto; padding: 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 26px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .mark { width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg, var(--primary), #14b8a6); color: white; display: grid; place-items: center; font-size: 28px; font-weight: 900; box-shadow: 0 14px 32px rgba(15,118,110,.25); }
+    .title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: rgba(255,255,255,.8); border-radius: 999px; padding: 10px 14px; color: var(--primary-dark); font-weight: 800; }
+    .pulse { width: 10px; height: 10px; border-radius: 999px; background: #22c55e; box-shadow: 0 0 0 7px rgba(34,197,94,.14); }
+    .grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(320px,.65fr); gap: 22px; align-items: stretch; }
+    .card { background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: 32px; box-shadow: var(--shadow); backdrop-filter: blur(18px); }
+    .hero { padding: 42px; }
+    .eyebrow { color: var(--primary); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 900; }
+    h1 { font-size: clamp(38px,6vw,66px); line-height: .96; letter-spacing: -.06em; margin: 14px 0; max-width: 760px; }
+    .copy { color: var(--muted); font-size: 18px; line-height: 1.55; max-width: 720px; }
+    label { display: block; font-weight: 850; margin-top: 18px; }
+    input { width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(98,125,152,.25); margin-top: 8px; outline: none; font: inherit; }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(15,118,110,.11); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; align-items: center; }
+    button { border: 0; border-radius: 16px; padding: 14px 18px; font-weight: 900; cursor: pointer; }
+    .primary { color: white; background: linear-gradient(135deg, var(--primary), #0891b2); box-shadow: 0 18px 40px rgba(15,118,110,.22); }
+    .secondary { color: var(--primary-dark); background: rgba(15,118,110,.10); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .side { display: grid; gap: 18px; }
+    .panel { padding: 24px; }
+    .panel p { color: var(--muted); line-height: 1.5; }
+    .danger { background: linear-gradient(135deg, #fff, #fff1f2); }
+    .row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(98,125,152,.12); }
+    .row:last-child { border-bottom: 0; }
+    .check { width: 28px; height: 28px; border-radius: 999px; background: rgba(15,118,110,.12); color: var(--primary); display: grid; place-items: center; font-weight: 900; flex: 0 0 28px; }
+    .row strong { display: block; }
+    .row span { color: var(--muted); font-size: 14px; line-height: 1.4; }
+    .session { display: none; padding: 30px; }
+    .session.active { display: block; }
+    .stage { min-height: 300px; display: grid; place-items: center; text-align: center; padding: 30px; border-radius: 28px; margin-top: 20px; border: 1px solid rgba(15,118,110,.14); background: radial-gradient(circle at 50% 35%, rgba(20,184,166,.15), transparent 30%), linear-gradient(135deg, #fff, #effdfa); }
+    .mic { width: 90px; height: 90px; display: grid; place-items: center; border-radius: 30px; background: white; box-shadow: 0 18px 40px rgba(15,118,110,.16); font-size: 38px; margin: 0 auto 14px; }
+    .status { color: var(--muted); line-height: 1.5; }
+    .flow { margin-top: 20px; padding: 18px; border-radius: 22px; background: rgba(15,118,110,.07); border: 1px solid var(--border); }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .chip { padding: 9px 12px; border-radius: 999px; background: white; font-size: 13px; font-weight: 850; }
+    .log { max-height: 240px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #334e68; background: rgba(255,255,255,.76); border-radius: 18px; padding: 14px; margin-top: 18px; border: 1px solid rgba(98,125,152,.14); }
+    .hidden { display: none; }
+    .error { color: var(--danger); margin-top: 14px; font-weight: 800; }
+    @media (max-width: 900px) { .app { padding: 18px; } .topbar, .grid { display: block; } .hero { padding: 26px; margin-bottom: 18px; } .pill { margin-top: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">+</div>
+        <div>
+          <div class="title">CareConnect Voice</div>
+          <div class="sub">Microphone-based LiveKit healthcare helper</div>
+        </div>
+      </div>
+      <div class="pill"><span class="pulse"></span> LiveKit + Cartesia + Claude Haiku</div>
+    </header>
+
+    <main id="landing" class="grid">
+      <section class="card hero">
+        <div class="eyebrow">Browser microphone demo</div>
+        <h1>Talk to the clinic helper from your browser.</h1>
+        <p class="copy">No SIP trunk or phone call setup needed. Your browser microphone joins a LiveKit room. The helper listens with Cartesia STT, reasons with Claude Haiku, and speaks with Cartesia TTS.</p>
+
+        <label>Your name
+          <input id="participantName" value="Patient" />
+        </label>
+        <label>Optional room name
+          <input id="roomName" placeholder="Leave blank for auto room" />
+        </label>
+        <div class="actions">
+          <button id="startBtn" class="primary">Start voice session</button>
+          <span id="startError" class="error"></span>
+        </div>
+
+        <div class="flow">
+          <div class="eyebrow">Try saying</div>
+          <div class="chips">
+            <span class="chip">I want to book an appointment</span>
+            <span class="chip">What are your clinic hours?</span>
+            <span class="chip">I need medical advice</span>
+            <span class="chip">Can someone call me back?</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="card panel danger">
+          <div class="eyebrow">Safety guardrail</div>
+          <p>This is a helper, not a doctor replacement. It should not diagnose, prescribe, recommend medication, or answer urgent clinical questions.</p>
+        </section>
+        <section class="card panel">
+          <div class="eyebrow">V1 scope</div>
+          <div class="row"><div class="check">✓</div><div><strong>Scheduling</strong><span>Book, reschedule, cancel, confirm requests.</span></div></div>
+          <div class="row"><div class="check">✓</div><div><strong>FAQ</strong><span>Hours, location, pricing, policies, memberships.</span></div></div>
+          <div class="row"><div class="check">✓</div><div><strong>Escalation</strong><span>Clinical or urgent questions become staff tasks.</span></div></div>
+        </section>
+      </aside>
+    </main>
+
+    <section id="session" class="card session">
+      <div class="topbar" style="margin-bottom:0;">
+        <div>
+          <div class="eyebrow">Connected room</div>
+          <h2 id="roomTitle">Voice session</h2>
+          <div id="sessionStatus" class="status">Connecting...</div>
+        </div>
+        <button id="leaveBtn" class="secondary">Leave</button>
+      </div>
+      <div class="stage">
+        <div>
+          <div class="mic">🎙️</div>
+          <h2>Voice helper active</h2>
+          <p class="status">Keep your microphone allowed and speak naturally. The agent should greet you after joining.</p>
+          <div class="actions" style="justify-content:center;">
+            <button id="muteBtn" class="secondary">Mute mic</button>
+            <button id="dashBtn" class="secondary">Refresh dashboard</button>
+          </div>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="eyebrow">Workflow</div>
+        <div class="chips">
+          <span class="chip">Browser mic</span><span class="chip">LiveKit</span><span class="chip">Cartesia STT</span><span class="chip">Claude Haiku</span><span class="chip">Cartesia TTS</span><span class="chip">SQLite tasks</span>
+        </div>
+      </div>
+      <pre id="debugLog" class="log"></pre>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <script>
+    const { Room, RoomEvent, createLocalAudioTrack } = LivekitClient;
+
+    let room = null;
+    let micTrack = null;
+    let muted = false;
+
+    const landing = document.getElementById('landing');
+    const session = document.getElementById('session');
+    const logEl = document.getElementById('debugLog');
+    const startError = document.getElementById('startError');
+
+    function log(msg) {
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logEl.textContent = line + '\n' + logEl.textContent;
+      console.log(line);
+    }
+
+    function attachAudio(track) {
+      const el = track.attach();
+      el.autoplay = true;
+      el.playsInline = true;
+      el.dataset.remoteAudio = 'true';
+      document.body.appendChild(el);
+      el.play().catch(() => log('Browser blocked autoplay; click anywhere or restart session.'));
+    }
+
+    async function start() {
+      startError.textContent = '';
+      document.getElementById('startBtn').disabled = true;
+      try {
+        const participantName = document.getElementById('participantName').value || 'Patient';
+        const roomName = document.getElementById('roomName').value || null;
+        logEl.textContent = '';
+
+        const res = await fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participant_name: participantName, room_name: roomName })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        landing.classList.add('hidden');
+        session.classList.add('active');
+        document.getElementById('roomTitle').textContent = data.room_name;
+        document.getElementById('sessionStatus').textContent = 'Connecting to LiveKit...';
+
+        room = new Room({ adaptiveStream: true, dynacast: true });
+        room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
+          log(`Subscribed to ${track.kind} from ${participant.identity}`);
+          if (track.kind === 'audio') attachAudio(track);
+        });
+        room.on(RoomEvent.ParticipantConnected, (participant) => log(`Participant connected: ${participant.identity}`));
+        room.on(RoomEvent.Disconnected, () => log('Disconnected from LiveKit'));
+
+        await room.connect(data.livekit_url, data.token);
+        log('Connected to LiveKit room');
+
+        micTrack = await createLocalAudioTrack({
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        });
+        await room.localParticipant.publishTrack(micTrack);
+        log('Microphone published');
+        document.getElementById('sessionStatus').textContent = 'Connected. Speak to the clinic helper.';
+      } catch (err) {
+        console.error(err);
+        startError.textContent = ' ' + (err.message || 'Failed to start session');
+        landing.classList.remove('hidden');
+        session.classList.remove('active');
+      } finally {
+        document.getElementById('startBtn').disabled = false;
+      }
+    }
+
+    async function leave() {
+      if (micTrack) { micTrack.stop(); micTrack = null; }
+      if (room) { await room.disconnect(); room = null; }
+      document.querySelectorAll('[data-remote-audio="true"]').forEach(el => el.remove());
+      landing.classList.remove('hidden');
+      session.classList.remove('active');
+    }
+
+    async function toggleMute() {
+      if (!micTrack) return;
+      muted = !muted;
+      await micTrack.mute(muted);
+      document.getElementById('muteBtn').textContent = muted ? 'Unmute mic' : 'Mute mic';
+      log(muted ? 'Microphone muted' : 'Microphone unmuted');
+    }
+
+    async function refreshDashboard() {
+      const [summary, tasks] = await Promise.all([
+        fetch('/api/dashboard').then(r => r.json()),
+        fetch('/api/tasks').then(r => r.json())
+      ]);
+      log(`Dashboard: ${JSON.stringify(summary)} | latest tasks: ${tasks.tasks.slice(0, 3).map(t => t.task_type + '#' + t.id).join(', ') || 'none'}`);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', start);
+    document.getElementById('leaveBtn').addEventListener('click', leave);
+    document.getElementById('muteBtn').addEventListener('click', toggleMute);
+    document.getElementById('dashBtn').addEventListener('click', refreshDashboard);
+  </script>
+</body>
+</html>

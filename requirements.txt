@@ -1,0 +1,10 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-dotenv>=1.0.1
+pydantic>=2.7.0
+aiofiles>=24.1.0
+livekit>=1.1.13
+livekit-api>=1.0.6
+livekit-agents>=1.6.0
+livekit-plugins-cartesia>=1.6.0
+livekit-plugins-anthropic>=1.6.0
