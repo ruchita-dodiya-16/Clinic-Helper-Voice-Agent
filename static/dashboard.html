@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CareConnect Staff Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f7f9;
+      --card: #ffffff;
+      --text: #10202e;
+      --muted: #5b7185;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --border: rgba(16, 32, 46, 0.09);
+      --shadow: 0 10px 30px rgba(16, 32, 46, 0.06);
+      --amber-bg: #fef3c7; --amber-fg: #92400e;
+      --blue-bg: #dbeafe; --blue-fg: #1e40af;
+      --green-bg: #dcfce7; --green-fg: #166534;
+      --red-bg: #fee2e2; --red-fg: #991b1b;
+      --purple-bg: #ede9fe; --purple-fg: #5b21b6;
+      --slate-bg: #e2e8f0; --slate-fg: #334155;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1420; --card: #121e2c; --text: #e7edf3; --muted: #8ea3b6;
+        --primary: #2dd4bf; --primary-dark: #5eead4; --border: rgba(231,237,243,0.10);
+        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+        --amber-bg: #3f2d05; --amber-fg: #fcd34d;
+        --blue-bg: #0f2647; --blue-fg: #93c5fd;
+        --green-bg: #0d2f1c; --green-fg: #86efac;
+        --red-bg: #3a1212; --red-fg: #fca5a5;
+        --purple-bg: #241a3d; --purple-fg: #c4b5fd;
+        --slate-bg: #1b2735; --slate-fg: #cbd5e1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark { width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), #0891b2); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 20px; }
+    .title { font-size: 18px; font-weight: 900; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 12.5px; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    a.link { color: var(--primary-dark); font-weight: 700; text-decoration: none; font-size: 13px; }
+    button { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; font-size: 13px; }
+    .primary-btn { background: var(--primary); color: #fff; }
+    .ghost-btn { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .live-dot { width: 8px; height: 8px; border-radius: 999px; background: #22c55e; display: inline-block; margin-right: 6px; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .updated { color: var(--muted); font-size: 12px; }
+
+    .kpis { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 12px; margin-bottom: 22px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); }
+    .kpi .label { color: var(--muted); font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+    .kpi .value { font-size: 28px; font-weight: 900; margin-top: 6px; letter-spacing: -0.02em; }
+    .kpi.alert .value { color: var(--red-fg); }
+
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .panel-title { font-weight: 900; font-size: 14.5px; }
+    .panel-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab { padding: 7px 12px; border-radius: 999px; background: var(--slate-bg); color: var(--slate-fg); font-size: 12.5px; font-weight: 800; cursor: pointer; border: none; }
+    .tab.active { background: var(--primary); color: #fff; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 18px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .empty { padding: 26px 18px; color: var(--muted); text-align: center; font-size: 13px; }
+    .table-scroll { overflow-x: auto; }
+
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .b-amber { background: var(--amber-bg); color: var(--amber-fg); }
+    .b-blue { background: var(--blue-bg); color: var(--blue-fg); }
+    .b-green { background: var(--green-bg); color: var(--green-fg); }
+    .b-red { background: var(--red-bg); color: var(--red-fg); }
+    .b-purple { background: var(--purple-bg); color: var(--purple-fg); }
+    .b-slate { background: var(--slate-bg); color: var(--slate-fg); }
+
+    .name-cell strong { display: block; }
+    .name-cell span { color: var(--muted); font-size: 12px; }
+    .two-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+
+    @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } .two-col { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">+</div>
+        <div>
+          <div class="title">CareConnect — Staff Dashboard</div>
+          <div class="sub">Live view of patient calls, cases, and retention outreach</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="updated"><span class="live-dot"></span>Auto-refreshing · updated <span id="lastUpdated">—</span></span>
+        <button class="ghost-btn" id="refreshBtn">Refresh now</button>
+        <a class="link" href="/">← Patient voice demo</a>
+      </div>
+    </header>
+
+    <section class="kpis" id="kpis"></section>
+
+    <div class="two-col">
+      <div>
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Cases</div>
+              <div class="panel-sub">Appointments, callbacks, escalations, retention, FAQ, and feedback — most recent first</div>
+            </div>
+            <div class="tabs" id="caseTabs"></div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Type</th><th>Patient</th><th>Details</th><th>Priority</th><th>Status</th><th>When</th></tr>
+              </thead>
+              <tbody id="casesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Recent calls</div>
+              <div class="panel-sub">Inbound, browser demo, and outbound retention calls with outcome</div>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Patient / Phone</th><th>Direction</th><th>Type</th><th>Started</th><th>Duration</th><th>Outcome</th></tr>
+              </thead>
+              <tbody id="callsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Retention queue</div>
+              <div class="panel-sub">Patients due or overdue for re-engagement outreach</div>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Patient</th><th>Due</th><th>Attempts</th><th>Status</th></tr>
+              </thead>
+              <tbody id="retentionBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CASE_TABS = [
+      { key: '', label: 'All' },
+      { key: 'appointment', label: 'Appointments' },
+      { key: 'callback', label: 'Callbacks' },
+      { key: 'escalation', label: 'Escalations' },
+      { key: 'retention', label: 'Retention' },
+      { key: 'faq', label: 'FAQ' },
+      { key: 'feedback', label: 'Feedback' },
+    ];
+    let activeCaseType = '';
+
+    const PRIORITY_BADGE = { urgent: 'b-red', normal: 'b-slate' };
+    const STATUS_BADGE = { new: 'b-amber', contacted: 'b-blue', scheduled: 'b-blue', pending: 'b-amber', resolved: 'b-green' };
+    const OUTCOME_BADGE = {
+      answered: 'b-green', voicemail_left: 'b-blue', no_answer: 'b-amber',
+      uncertain: 'b-amber', error: 'b-red', transferred: 'b-purple',
+    };
+    const CASE_TYPE_BADGE = {
+      appointment: 'b-blue', callback: 'b-slate', escalation: 'b-red',
+      retention: 'b-purple', faq: 'b-green', feedback: 'b-amber',
+    };
+
+    function badge(cls, text) {
+      return `<span class="badge ${cls || 'b-slate'}">${text}</span>`;
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+      if (diffMin < 1) return 'just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffH = Math.round(diffMin / 60);
+      if (diffH < 24) return `${diffH}h ago`;
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function isToday(iso) {
+      if (!iso) return false;
+      const d = new Date(iso);
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }
+
+    function renderTabs() {
+      const el = document.getElementById('caseTabs');
+      el.innerHTML = CASE_TABS.map(t =>
+        `<button class="tab ${t.key === activeCaseType ? 'active' : ''}" data-key="${t.key}">${t.label}</button>`
+      ).join('');
+      el.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => { activeCaseType = btn.dataset.key; loadAll(); });
+      });
+    }
+
+    function renderKpis(summary, callsToday, retentionDueToday) {
+      const tiles = [
+        { label: 'Total patients', value: summary.patients ?? 0 },
+        { label: 'Open escalations', value: summary.escalations ?? 0, alert: (summary.escalations ?? 0) > 0 },
+        { label: 'Callbacks pending', value: summary.callbacks ?? 0 },
+        { label: 'Retention due today', value: retentionDueToday, alert: retentionDueToday > 0 },
+        { label: 'Calls today', value: callsToday },
+        { label: 'Total cases', value: summary.tasks ?? 0 },
+      ];
+      document.getElementById('kpis').innerHTML = tiles.map(t => `
+        <div class="kpi ${t.alert ? 'alert' : ''}">
+          <div class="label">${t.label}</div>
+          <div class="value">${t.value}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderCases(cases) {
+      const body = document.getElementById('casesBody');
+      if (!cases.length) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">No cases yet.</td></tr>`;
+        return;
+      }
+      body.innerHTML = cases.map(c => `
+        <tr>
+          <td>${badge(CASE_TYPE_BADGE[c.case_type], c.case_type)}</td>
+          <td class="name-cell"><strong>${c.patient_name || c.patient_key || 'Unknown'}</strong><span>${c.phone_number || ''}</span></td>
+          <td>${c.title || ''}${c.details && Object.keys(c.details).length ? `<div style="color:var(--muted); font-size:12px; margin-top:4px;">${Object.entries(c.details).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(' · ')}</div>` : ''}</td>
+          <td>${badge(PRIORITY_BADGE[c.priority], c.priority || 'normal')}</td>
+          <td>${badge(STATUS_BADGE[c.status], c.status || 'new')}</td>
+          <td>${timeAgo(c.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCalls(calls) {
+      const body = document.getElementById('callsBody');
+      if (!calls.length) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">No calls logged yet.</td></tr>`;
+        return;
+      }
+      body.innerHTML = calls.map(c => `
+        <tr>
+          <td class="name-cell"><strong>${c.patient_key || 'Unknown'}</strong><span>${c.phone_number || ''}</span></td>
+          <td>${c.direction || ''}</td>
+          <td>${c.call_type || ''}</td>
+          <td>${timeAgo(c.started_at)}</td>
+          <td>${c.duration_seconds ? Math.round(c.duration_seconds) + 's' : '—'}</td>
+          <td>${badge(OUTCOME_BADGE[c.outcome], c.outcome || 'unknown')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderRetention(queue) {
+      const body = document.getElementById('retentionBody');
+      if (!queue.length) {
+        body.innerHTML = `<tr><td colspan="4" class="empty">No patients currently due.</td></tr>`;
+        return;
+      }
+      body.innerHTML = queue.map(p => `
+        <tr>
+          <td class="name-cell"><strong>${p.name || p.patient_key}</strong><span>${p.retention_reason || 'no reason set'}</span></td>
+          <td>${p.next_retention_due_date || '—'}</td>
+          <td>${p.retention_attempts || 0}</td>
+          <td>${badge(STATUS_BADGE[p.retention_status], p.retention_status || 'pending')}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadAll() {
+      renderTabs();
+      const [summary, tasksRes, retentionRes, callsRes] = await Promise.all([
+        fetch('/api/dashboard').then(r => r.json()),
+        fetch('/api/tasks' + (activeCaseType ? `?case_type=${activeCaseType}` : '')).then(r => r.json()),
+        fetch('/api/retention-queue').then(r => r.json()),
+        fetch('/api/call-log').then(r => r.json()),
+      ]);
+
+      const calls = callsRes.calls || [];
+      const queue = retentionRes.retention_queue || [];
+      const callsToday = calls.filter(c => isToday(c.started_at)).length;
+      const retentionDueToday = queue.filter(p => p.next_retention_due_date && isToday(p.next_retention_due_date + 'T00:00:00')).length;
+
+      renderKpis(summary, callsToday, retentionDueToday);
+      renderCases(tasksRes.tasks || []);
+      renderCalls(calls);
+      renderRetention(queue);
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadAll);
+    loadAll();
+    setInterval(loadAll, 10000);
+  </script>
+</body>
+</html>

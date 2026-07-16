@@ -37,6 +37,28 @@ if grep -q "your_" .env; then
   exit 1
 fi
 
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker is required to run the local Postgres database (docker-compose.yml). Install Docker and try again."
+  exit 1
+fi
+
+echo "Starting Postgres (docker compose)..."
+docker compose up -d db
+
+echo -n "Waiting for Postgres to be healthy"
+for _ in $(seq 1 30); do
+  status="$(docker inspect --format='{{.State.Health.Status}}' "$(docker compose ps -q db)" 2>/dev/null || echo "")"
+  if [ "$status" = "healthy" ]; then
+    echo " done"
+    break
+  fi
+  echo -n "."
+  sleep 2
+done
+
+echo "Applying database migrations (alembic upgrade head)..."
+python -m alembic upgrade head
+
 PIDS=()
 cleanup() {
   echo ""
@@ -64,6 +86,7 @@ start_service() {
 start_service api python -m uvicorn src.api_server:app --host "${APP_HOST:-127.0.0.1}" --port "${APP_PORT:-8000}"
 sleep 2
 start_service agent python -m src.agent dev
+start_service retention python -m src.retention_worker
 
 cat <<MSG
 
@@ -71,11 +94,12 @@ All services started.
 
 Open: http://${APP_HOST:-127.0.0.1}:${APP_PORT:-8000}
 
-This version uses browser microphone UI instead of SIP/calling.
+Browser microphone UI works immediately. Real phone calling and automated
+retention outreach need Twilio + LiveKit SIP configured first (see README.md).
 Press Ctrl+C to stop everything.
 
 MSG
 
-tail -n 60 -f "$LOG_DIR/api.log" "$LOG_DIR/agent.log" &
+tail -n 60 -f "$LOG_DIR/api.log" "$LOG_DIR/agent.log" "$LOG_DIR/retention.log" &
 PIDS+=("$!")
 wait

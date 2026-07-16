@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from livekit import api
 
-from . import db
+from . import repository
 from .settings import (
     AGENT_NAME,
     LIVEKIT_API_KEY,
@@ -76,6 +76,7 @@ async def dispatch_agent(room_name: str, participant_name: str) -> None:
 
         metadata = json.dumps(
             {
+                "call_type": "browser_demo",
                 "participant_name": participant_name,
                 "source": "browser_microphone_ui",
                 "scope": "healthcare_helper_not_doctor",
@@ -97,6 +98,11 @@ async def index():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/dashboard")
+async def dashboard_page():
+    return FileResponse(STATIC_DIR / "dashboard.html")
+
+
 @app.get("/api/health")
 async def health():
     return {"ok": True, "agent_name": AGENT_NAME}
@@ -106,13 +112,6 @@ async def health():
 async def create_session(req: SessionRequest):
     participant_name = req.participant_name.strip() or "Patient"
     room_name = req.room_name or f"clinic-helper-{uuid.uuid4().hex[:10]}"
-
-    db.upsert_session(room_name, participant_name)
-    db.add_event(
-        room_name,
-        "session_created",
-        {"participant_name": participant_name, "agent_name": AGENT_NAME},
-    )
 
     try:
         await dispatch_agent(room_name, participant_name)
@@ -133,9 +132,24 @@ async def create_session(req: SessionRequest):
 
 @app.get("/api/dashboard")
 async def dashboard():
-    return db.dashboard_summary()
+    return await repository.dashboard_summary()
 
 
 @app.get("/api/tasks")
-async def tasks():
-    return {"tasks": db.list_tasks()}
+async def tasks(case_type: str | None = None):
+    return {"tasks": await repository.list_cases(case_type=case_type)}
+
+
+@app.get("/api/patients")
+async def patients():
+    return {"patients": await repository.list_patients()}
+
+
+@app.get("/api/retention-queue")
+async def retention_queue():
+    return {"retention_queue": await repository.retention_queue()}
+
+
+@app.get("/api/call-log")
+async def call_log():
+    return {"calls": await repository.list_call_log()}

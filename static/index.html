@@ -82,14 +82,17 @@
           <div class="sub">Microphone-based LiveKit healthcare helper</div>
         </div>
       </div>
-      <div class="pill"><span class="pulse"></span> LiveKit + Cartesia + Claude Haiku</div>
+      <div class="actions" style="margin:0;">
+        <a class="secondary" style="text-decoration:none; display:inline-flex; align-items:center; padding:12px 16px; border-radius:16px;" href="/dashboard">Staff dashboard →</a>
+        <div class="pill"><span class="pulse"></span> LiveKit + Cartesia + Claude Haiku</div>
+      </div>
     </header>
 
     <main id="landing" class="grid">
       <section class="card hero">
         <div class="eyebrow">Browser microphone demo</div>
         <h1>Talk to the clinic helper from your browser.</h1>
-        <p class="copy">No SIP trunk or phone call setup needed. Your browser microphone joins a LiveKit room. The helper listens with Cartesia STT, reasons with Claude Haiku, and speaks with Cartesia TTS.</p>
+        <p class="copy">This is the same helper patients reach by phone (once Twilio + LiveKit SIP is configured) — it remembers returning callers, routes appointments/callbacks/escalations/retention/feedback, and can live-transfer urgent issues to staff. This page joins over your browser microphone instead of a phone line, for testing without a live number.</p>
 
         <label>Your name
           <input id="participantName" value="Patient" />
@@ -122,7 +125,9 @@
           <div class="eyebrow">V1 scope</div>
           <div class="row"><div class="check">✓</div><div><strong>Scheduling</strong><span>Book, reschedule, cancel, confirm requests.</span></div></div>
           <div class="row"><div class="check">✓</div><div><strong>FAQ</strong><span>Hours, location, pricing, policies, memberships.</span></div></div>
-          <div class="row"><div class="check">✓</div><div><strong>Escalation</strong><span>Clinical or urgent questions become staff tasks.</span></div></div>
+          <div class="row"><div class="check">✓</div><div><strong>Escalation</strong><span>Urgent issues log a case and live-transfer to staff.</span></div></div>
+          <div class="row"><div class="check">✓</div><div><strong>Retention</strong><span>Follow-up reminders, and automated outbound re-engagement calls.</span></div></div>
+          <div class="row"><div class="check">✓</div><div><strong>Memory</strong><span>Returning callers are recognized and greeted by name.</span></div></div>
         </section>
       </aside>
     </main>
@@ -143,14 +148,13 @@
           <p class="status">Keep your microphone allowed and speak naturally. The agent should greet you after joining.</p>
           <div class="actions" style="justify-content:center;">
             <button id="muteBtn" class="secondary">Mute mic</button>
-            <button id="dashBtn" class="secondary">Refresh dashboard</button>
           </div>
         </div>
       </div>
       <div class="flow">
         <div class="eyebrow">Workflow</div>
         <div class="chips">
-          <span class="chip">Browser mic</span><span class="chip">LiveKit</span><span class="chip">Cartesia STT</span><span class="chip">Claude Haiku</span><span class="chip">Cartesia TTS</span><span class="chip">SQLite tasks</span>
+          <span class="chip">Browser mic</span><span class="chip">LiveKit</span><span class="chip">Cartesia STT</span><span class="chip">Claude Haiku</span><span class="chip">Cartesia TTS</span><span class="chip">Postgres</span>
         </div>
       </div>
       <pre id="debugLog" class="log"></pre>
@@ -251,18 +255,9 @@
       log(muted ? 'Microphone muted' : 'Microphone unmuted');
     }
 
-    async function refreshDashboard() {
-      const [summary, tasks] = await Promise.all([
-        fetch('/api/dashboard').then(r => r.json()),
-        fetch('/api/tasks').then(r => r.json())
-      ]);
-      log(`Dashboard: ${JSON.stringify(summary)} | latest tasks: ${tasks.tasks.slice(0, 3).map(t => t.task_type + '#' + t.id).join(', ') || 'none'}`);
-    }
-
     document.getElementById('startBtn').addEventListener('click', start);
     document.getElementById('leaveBtn').addEventListener('click', leave);
     document.getElementById('muteBtn').addEventListener('click', toggleMute);
-    document.getElementById('dashBtn').addEventListener('click', refreshDashboard);
   </script>
 </body>
 </html>

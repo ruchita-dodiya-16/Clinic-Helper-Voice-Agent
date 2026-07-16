@@ -4,7 +4,8 @@ __pycache__/
 
 .env
 
-data/
+data/*
+!data/clinic_knowledge_base.md
 logs/
 
 .DS_Store
