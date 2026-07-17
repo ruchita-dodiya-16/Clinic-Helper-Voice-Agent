@@ -6,206 +6,557 @@
   <title>CareConnect Staff Dashboard</title>
   <style>
     :root {
-      --bg: #f4f7f9;
+      --bg: #f8fafc;
       --card: #ffffff;
-      --text: #10202e;
-      --muted: #5b7185;
-      --primary: #0f766e;
-      --primary-dark: #115e59;
-      --border: rgba(16, 32, 46, 0.09);
-      --shadow: 0 10px 30px rgba(16, 32, 46, 0.06);
-      --amber-bg: #fef3c7; --amber-fg: #92400e;
-      --blue-bg: #dbeafe; --blue-fg: #1e40af;
-      --green-bg: #dcfce7; --green-fg: #166534;
-      --red-bg: #fee2e2; --red-fg: #991b1b;
-      --purple-bg: #ede9fe; --purple-fg: #5b21b6;
-      --slate-bg: #e2e8f0; --slate-fg: #334155;
+      --text: #1a1a1a;
+      --text-muted: #666666;
+      --border: #e5e7eb;
+      --primary: #1565c0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 2px 8px rgba(26, 35, 50, 0.06);
+      --shadow-lg: 0 8px 24px rgba(26, 35, 50, 0.10);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0b1420; --card: #121e2c; --text: #e7edf3; --muted: #8ea3b6;
-        --primary: #2dd4bf; --primary-dark: #5eead4; --border: rgba(231,237,243,0.10);
-        --shadow: 0 10px 30px rgba(0,0,0,0.35);
-        --amber-bg: #3f2d05; --amber-fg: #fcd34d;
-        --blue-bg: #0f2647; --blue-fg: #93c5fd;
-        --green-bg: #0d2f1c; --green-fg: #86efac;
-        --red-bg: #3a1212; --red-fg: #fca5a5;
-        --purple-bg: #241a3d; --purple-fg: #c4b5fd;
-        --slate-bg: #1b2735; --slate-fg: #cbd5e1;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    .app { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .mark { width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), #0891b2); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 20px; }
-    .title { font-size: 18px; font-weight: 900; letter-spacing: -0.02em; }
-    .sub { color: var(--muted); font-size: 12.5px; }
-    .topbar-actions { display: flex; align-items: center; gap: 10px; }
-    a.link { color: var(--primary-dark); font-weight: 700; text-decoration: none; font-size: 13px; }
-    button { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; font-size: 13px; }
-    .primary-btn { background: var(--primary); color: #fff; }
-    .ghost-btn { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .live-dot { width: 8px; height: 8px; border-radius: 999px; background: #22c55e; display: inline-block; margin-right: 6px; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
-    .updated { color: var(--muted); font-size: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    .container { max-width: 1600px; margin: 0 auto; padding: 30px 20px; }
 
-    .kpis { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 12px; margin-bottom: 22px; }
-    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); }
-    .kpi .label { color: var(--muted); font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
-    .kpi .value { font-size: 28px; font-weight: 900; margin-top: 6px; letter-spacing: -0.02em; }
-    .kpi.alert .value { color: var(--red-fg); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; }
+    .header-left h1 { font-size: 28px; font-weight: 700; margin: 0; }
+    .header-left p { color: var(--text-muted); font-size: 14px; margin: 4px 0 0; }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .status { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; background: var(--card); padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f5f5f5; }
+    .btn-back { background: transparent; border: 1px solid var(--border); color: var(--text); margin-bottom: 20px; }
 
-    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
-    .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
-    .panel-title { font-weight: 900; font-size: 14.5px; }
-    .panel-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+    .nav-tab { padding: 10px 16px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; border-radius: 6px; font-size: 13px; transition: all 0.2s; }
+    .nav-tab.active { background: var(--primary); color: white; }
+    .nav-tab:hover:not(.active) { background: #f0f0f0; }
 
-    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .tab { padding: 7px 12px; border-radius: 999px; background: var(--slate-bg); color: var(--slate-fg); font-size: 12.5px; font-weight: 800; cursor: pointer; border: none; }
-    .tab.active { background: var(--primary); color: #fff; }
+    .view { display: none; }
+    .view.active { display: block; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { text-align: left; padding: 10px 18px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; border-bottom: 1px solid var(--border); }
-    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    tr:last-child td { border-bottom: none; }
-    .empty { padding: 26px 18px; color: var(--muted); text-align: center; font-size: 13px; }
-    .table-scroll { overflow-x: auto; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .metric-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .metric-value { font-size: 36px; font-weight: 700; color: var(--primary); }
 
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
-    .b-amber { background: var(--amber-bg); color: var(--amber-fg); }
-    .b-blue { background: var(--blue-bg); color: var(--blue-fg); }
-    .b-green { background: var(--green-bg); color: var(--green-fg); }
-    .b-red { background: var(--red-bg); color: var(--red-fg); }
-    .b-purple { background: var(--purple-bg); color: var(--purple-fg); }
-    .b-slate { background: var(--slate-bg); color: var(--slate-fg); }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 30px; }
+    .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); background: #fafbfc; }
+    .panel-title { font-weight: 700; font-size: 15px; }
+    .panel-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-    .name-cell strong { display: block; }
-    .name-cell span { color: var(--muted); font-size: 12px; }
-    .two-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table thead { background: #fafbfc; }
+    .table th { padding: 12px 16px; text-align: left; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--border); }
+    .table td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .table tbody tr:hover { background: #fafbfc; }
+    .empty { padding: 40px; text-align: center; color: var(--text-muted); }
 
-    @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } .two-col { grid-template-columns: 1fr; } }
-    @media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .badge-answered { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-new { background: rgba(245,158,11,0.1); color: var(--warning); }
+    .badge-urgent { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .badge-inbound { background: rgba(21,101,192,0.1); color: var(--primary); }
+
+    .patient-name { font-weight: 600; color: var(--primary); text-decoration: underline; cursor: pointer; }
+    .patient-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .patient-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .info-box { border: 1px solid var(--border); border-radius: 8px; padding: 15px; background: #fafbfc; }
+    .info-box-title { font-weight: 700; margin-bottom: 12px; color: var(--primary); }
+    .info-item { font-size: 13px; line-height: 1.8; }
+
+    .call-icon { font-size: 18px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .call-icon:hover { color: var(--primary); opacity: 0.9; }
+
+    .call-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+    .call-modal.show { display: flex; }
+    .call-modal-content { background: var(--card); border-radius: 12px; padding: 30px; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center; }
+    .call-modal-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .call-modal-patient { font-size: 16px; color: var(--primary); font-weight: 600; margin-bottom: 5px; }
+    .call-modal-phone { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+    .call-modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .call-modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .call-modal-confirm { background: var(--success); color: white; }
+    .call-modal-confirm:hover { opacity: 0.9; }
+    .call-modal-cancel { background: var(--border); color: var(--text); }
+    .call-modal-cancel:hover { background: #ddd; }
+
+    .call-status-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.1); color: var(--success); }
+    .call-status-badge.active { background: rgba(16,185,129,0.2); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="mark">+</div>
-        <div>
-          <div class="title">CareConnect — Staff Dashboard</div>
-          <div class="sub">Live view of patient calls, cases, and retention outreach</div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>CareConnect Dashboard</h1>
+        <p>Healthcare clinic operations & patient management</p>
+      </div>
+      <div class="header-actions">
+        <div class="status">
+          <span class="dot"></span>
+          <span>Live · Updated <span id="lastUpdated">—</span></span>
+        </div>
+        <button class="btn btn-primary" id="refreshBtn">⟳ Refresh</button>
+        <a href="/call" style="text-decoration: none;"><button class="btn btn-outline">→ Make a call</button></a>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs" id="navTabs"></div>
+
+    <!-- VIEW: OVERVIEW -->
+    <div class="view active" id="view-overview">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total Patients</div>
+          <div class="metric-value" id="totalPatients">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Today's Calls</div>
+          <div class="metric-value" id="callsToday">0</div>
+          <div class="patient-sub" id="callsBreakdown">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total Cases</div>
+          <div class="metric-value" id="totalCases">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Doctors</div>
+          <div class="metric-value" id="totalDoctors">0</div>
         </div>
       </div>
-      <div class="topbar-actions">
-        <span class="updated"><span class="live-dot"></span>Auto-refreshing · updated <span id="lastUpdated">—</span></span>
-        <button class="ghost-btn" id="refreshBtn">Refresh now</button>
-        <a class="link" href="/">← Patient voice demo</a>
-      </div>
-    </header>
 
-    <section class="kpis" id="kpis"></section>
-
-    <div class="two-col">
-      <div>
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">Cases</div>
-              <div class="panel-sub">Appointments, callbacks, escalations, retention, FAQ, and feedback — most recent first</div>
-            </div>
-            <div class="tabs" id="caseTabs"></div>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Type</th><th>Patient</th><th>Details</th><th>Priority</th><th>Status</th><th>When</th></tr>
-              </thead>
-              <tbody id="casesBody"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">Recent calls</div>
-              <div class="panel-sub">Inbound, browser demo, and outbound retention calls with outcome</div>
-            </div>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr><th>Patient / Phone</th><th>Direction</th><th>Type</th><th>Started</th><th>Duration</th><th>Outcome</th></tr>
-              </thead>
-              <tbody id="callsBody"></tbody>
-            </table>
-          </div>
-        </section>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Today's Calls</div>
+          <div class="panel-subtitle">All inbound and outbound calls today</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Phone</th>
+              <th>Type</th>
+              <th>Direction</th>
+              <th>Time</th>
+              <th>Duration</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody id="todaysCallsTable"></tbody>
+        </table>
       </div>
 
-      <div>
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">Retention queue</div>
-              <div class="panel-sub">Patients due or overdue for re-engagement outreach</div>
-            </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">New Patients Today</div>
+          <div class="panel-subtitle">First-time callers requiring follow-up</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Phone</th>
+              <th>Health Issue</th>
+              <th>Doctor</th>
+              <th>Call Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="newPatientsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: PATIENTS LIST -->
+    <div class="view" id="view-patients">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Clinic Patients</div>
+          <div class="panel-subtitle">Click on a patient to view their full details and history</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Phone</th>
+              <th>Latest Issue</th>
+              <th>Doctor</th>
+              <th>Last Case</th>
+            </tr>
+          </thead>
+          <tbody id="patientsListTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PATIENT DETAIL MODAL -->
+    <div id="patientModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+      <div style="max-width: 900px; margin: 40px auto; background: var(--card); border-radius: 10px; padding: 30px; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+          <div>
+            <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="modalPatientName">Patient</div>
+            <div style="font-size: 13px; color: var(--text-muted);" id="modalPatientInfo"></div>
           </div>
-          <div class="table-scroll">
-            <table>
+          <button style="background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; color: var(--text-muted);" onclick="closePatientModal()">✕</button>
+        </div>
+
+        <div class="patient-info-grid" style="margin-bottom: 20px;">
+          <div class="info-box">
+            <div class="info-box-title">📋 Patient Information</div>
+            <div class="info-item" id="modalPatientBasicInfo"></div>
+          </div>
+          <div class="info-box">
+            <div class="info-box-title">📞 Call Summary</div>
+            <div class="info-item" id="modalPatientCallSummary"></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 12px; color: var(--primary);">Cases & Issues</div>
+          <div style="border: 1px solid var(--border); border-radius: 8px; overflow-x: auto;">
+            <table class="table" style="margin: 0;">
               <thead>
-                <tr><th>Patient</th><th>Due</th><th>Attempts</th><th>Status</th></tr>
+                <tr>
+                  <th>Health Issue</th>
+                  <th>Doctor</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
               </thead>
-              <tbody id="retentionBody"></tbody>
+              <tbody id="modalPatientCasesTable"></tbody>
             </table>
           </div>
-        </section>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 12px; color: var(--primary);">Call History</div>
+          <div style="border: 1px solid var(--border); border-radius: 8px; overflow-x: auto;">
+            <table class="table" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Direction</th>
+                  <th>Date & Time</th>
+                  <th>Duration</th>
+                  <th>Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="modalPatientCallsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL CONFIRMATION MODAL -->
+    <div id="callConfirmModal" class="call-modal">
+      <div class="call-modal-content">
+        <div class="call-modal-title">Confirm Call</div>
+        <div class="call-modal-patient" id="callModalPatientName">Patient</div>
+        <div class="call-modal-phone" id="callModalPatientPhone">+1234567890</div>
+        <div class="call-modal-buttons">
+          <button class="call-modal-confirm" onclick="confirmCall()">📞 Call Now</button>
+          <button class="call-modal-cancel" onclick="cancelCall()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: CASES -->
+    <div class="view" id="view-cases">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Cases</div>
+          <div class="panel-subtitle">Patient health issues and treatments</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Health Issue</th>
+              <th>Doctor</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="casesTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: DOCTORS -->
+    <div class="view" id="view-doctors">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Doctors</div>
+          <div class="panel-subtitle">Medical staff and availability</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Doctor Name</th>
+              <th>Specialty</th>
+              <th>Working Hours</th>
+            </tr>
+          </thead>
+          <tbody id="doctorsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: APPOINTMENTS -->
+    <div class="view" id="view-appointments">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Booked Appointments</div>
+          <div class="panel-subtitle">Patient appointments scheduled with doctors</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date & Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: OUTBOUND CALLS -->
+    <div class="view" id="view-outbound">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Today's Outbound Calls</div>
+          <div class="panel-subtitle">Retention calls scheduled for today - click the phone icon to initiate a call</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Phone</th>
+              <th>Health Issue</th>
+              <th>Doctor</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="outboundTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: RETENTION -->
+    <div class="view" id="view-retention">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Retention Queue</div>
+          <div class="panel-subtitle">Patients due or overdue for re-engagement</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Due Date</th>
+              <th>Reason</th>
+              <th>Attempts</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="retentionTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: CALLS -->
+    <div class="view" id="view-calls">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">All Calls</div>
+          <div class="panel-subtitle">All inbound, browser demo, and outbound calls with patient details</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Phone</th>
+              <th>Health Issue</th>
+              <th>Doctor</th>
+              <th>Type</th>
+              <th>Direction</th>
+              <th>Started</th>
+              <th>Duration</th>
+              <th>Outcome</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="allCallsTable"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <script>
-    const CASE_TABS = [
-      { key: '', label: 'All' },
-      { key: 'appointment', label: 'Appointments' },
-      { key: 'callback', label: 'Callbacks' },
-      { key: 'escalation', label: 'Escalations' },
-      { key: 'retention', label: 'Retention' },
-      { key: 'faq', label: 'FAQ' },
-      { key: 'feedback', label: 'Feedback' },
+    const NAV_ITEMS = [
+      { id: 'overview', label: 'Overview' },
+      { id: 'patients', label: 'Patients' },
+      { id: 'cases', label: 'Cases' },
+      { id: 'doctors', label: 'Doctors' },
+      { id: 'appointments', label: 'Appointments' },
+      { id: 'outbound', label: 'Outbound Calls' },
+      { id: 'retention', label: 'Retention' },
+      { id: 'calls', label: 'Calls' },
     ];
-    let activeCaseType = '';
 
-    const PRIORITY_BADGE = { urgent: 'b-red', normal: 'b-slate' };
-    const STATUS_BADGE = { new: 'b-amber', contacted: 'b-blue', scheduled: 'b-blue', pending: 'b-amber', resolved: 'b-green' };
-    const OUTCOME_BADGE = {
-      answered: 'b-green', voicemail_left: 'b-blue', no_answer: 'b-amber',
-      uncertain: 'b-amber', error: 'b-red', transferred: 'b-purple',
-    };
-    const CASE_TYPE_BADGE = {
-      appointment: 'b-blue', callback: 'b-slate', escalation: 'b-red',
-      retention: 'b-purple', faq: 'b-green', feedback: 'b-amber',
-    };
+    let activeTab = 'overview';
+    let allPatients = [];
+    let allCases = [];
+    let allCalls = [];
+    let allDoctors = [];
+    let allAppointments = [];
+    let allRetention = [];
+    let selectedPatientKey = null;
+    let activeCall = null;
+    let callStatusPoller = null;
+    let CONFIG = { test_patient_phone: '' };
 
-    function badge(cls, text) {
-      return `<span class="badge ${cls || 'b-slate'}">${text}</span>`;
+    // The patient phone number is always sourced from the .env (TEST_PATIENT_PHONE),
+    // never from the DB — so changing it in one place updates the whole UI.
+    function displayPhone() {
+      return CONFIG.test_patient_phone || '—';
+    }
+
+    function showTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + tabId).classList.add('active');
+      renderTabs();
+    }
+
+    function closePatientModal() {
+      document.getElementById('patientModal').style.display = 'none';
+      selectedPatientKey = null;
+    }
+
+    let pendingCall = null;
+
+    function initiateCall(phoneNumber, patientName, patientKey, reason) {
+      pendingCall = { phoneNumber, patientName, patientKey: patientKey || null, reason: reason || null };
+      document.getElementById('callModalPatientName').textContent = patientName;
+      document.getElementById('callModalPatientPhone').textContent = phoneNumber;
+      document.getElementById('callConfirmModal').classList.add('show');
+    }
+
+    async function confirmCall() {
+      if (!pendingCall) return;
+      const { phoneNumber, patientName, patientKey, reason } = pendingCall;
+      document.getElementById('callConfirmModal').classList.remove('show');
+      pendingCall = null;
+
+      try {
+        const res = await fetch('/api/outbound-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_number: phoneNumber, patient_name: patientName, patient_key: patientKey, retention_reason: reason })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || 'Failed to initiate call');
+        }
+        const data = await res.json();
+
+        activeCall = { phoneNumber, patientName, patientKey, roomName: data.room_name, status: 'ringing', startTime: new Date() };
+        renderOutbound();
+        startCallStatusPolling(data.room_name);
+      } catch (err) {
+        console.error('Call error:', err);
+        alert('Error dialing call: ' + err.message);
+      }
+    }
+
+    function startCallStatusPolling(roomName) {
+      if (callStatusPoller) clearInterval(callStatusPoller);
+      let elapsed = 0;
+      callStatusPoller = setInterval(async () => {
+        elapsed += 2;
+        if (!activeCall || activeCall.roomName !== roomName) {
+          clearInterval(callStatusPoller); callStatusPoller = null; return;
+        }
+        let data = null;
+        try {
+          const res = await fetch('/api/call-status/' + encodeURIComponent(roomName));
+          data = await res.json();
+        } catch (e) {
+          data = null; // treat as transient; grace logic below handles it
+        }
+
+        if (data && data.sip_active) {
+          // Patient answered — media flowing.
+          activeCall.status = 'in_call';
+          activeCall.everConnected = true;
+        } else if (data && (data.has_agent || data.sip_present)) {
+          // Agent is up / phone is ringing but not answered yet.
+          activeCall.status = 'ringing';
+        } else {
+          // Nobody in the room. Decide if this means "ended" or "not ready yet".
+          if (activeCall.everConnected) {
+            stopActiveCall(); return;          // was connected, now gone -> hung up
+          }
+          if (elapsed >= 45) { stopActiveCall(); return; } // never connected -> give up
+          activeCall.status = 'ringing';       // still setting up, keep ringing
+        }
+        renderOutbound();
+
+        if (elapsed > 600) stopActiveCall(); // hard safety cap (10 min)
+      }, 2000);
+    }
+
+    function stopActiveCall() {
+      if (callStatusPoller) { clearInterval(callStatusPoller); callStatusPoller = null; }
+      activeCall = null;
+      renderOutbound();
+    }
+
+    function cancelCall() {
+      document.getElementById('callConfirmModal').classList.remove('show');
+      pendingCall = null;
+    }
+
+    function renderTabs() {
+      const html = NAV_ITEMS.map(item => {
+        return `<button class="nav-tab ${activeTab === item.id ? 'active' : ''}" onclick="showTab('${item.id}')">${item.label}</button>`;
+      }).join('');
+      document.getElementById('navTabs').innerHTML = html;
     }
 
     function timeAgo(iso) {
       if (!iso) return '—';
       const d = new Date(iso);
-      if (isNaN(d)) return iso;
-      const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+      const diffMin = Math.round((Date.now() - d) / 60000);
       if (diffMin < 1) return 'just now';
-      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffMin < 60) return diffMin + 'm ago';
       const diffH = Math.round(diffMin / 60);
-      if (diffH < 24) return `${diffH}h ago`;
-      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (diffH < 24) return diffH + 'h ago';
+      return d.toLocaleDateString([], {month: 'short', day: 'numeric'});
     }
 
     function isToday(iso) {
@@ -215,109 +566,315 @@
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     }
 
-    function renderTabs() {
-      const el = document.getElementById('caseTabs');
-      el.innerHTML = CASE_TABS.map(t =>
-        `<button class="tab ${t.key === activeCaseType ? 'active' : ''}" data-key="${t.key}">${t.label}</button>`
-      ).join('');
-      el.querySelectorAll('.tab').forEach(btn => {
-        btn.addEventListener('click', () => { activeCaseType = btn.dataset.key; loadAll(); });
-      });
+    function formatDuration(seconds) {
+      if (!seconds) return '—';
+      if (seconds < 60) return seconds + 's';
+      return Math.round(seconds / 60) + 'm';
     }
 
-    function renderKpis(summary, callsToday, retentionDueToday) {
-      const tiles = [
-        { label: 'Total patients', value: summary.patients ?? 0 },
-        { label: 'Open escalations', value: summary.escalations ?? 0, alert: (summary.escalations ?? 0) > 0 },
-        { label: 'Callbacks pending', value: summary.callbacks ?? 0 },
-        { label: 'Retention due today', value: retentionDueToday, alert: retentionDueToday > 0 },
-        { label: 'Calls today', value: callsToday },
-        { label: 'Total cases', value: summary.tasks ?? 0 },
-      ];
-      document.getElementById('kpis').innerHTML = tiles.map(t => `
-        <div class="kpi ${t.alert ? 'alert' : ''}">
-          <div class="label">${t.label}</div>
-          <div class="value">${t.value}</div>
-        </div>
+    function badge(type, text) {
+      let cls = 'new';
+      if (type === 'answered') cls = 'answered';
+      else if (type === 'urgent') cls = 'urgent';
+      else if (type === 'inbound') cls = 'inbound';
+      return `<span class="badge badge-${cls}">${text}</span>`;
+    }
+
+    async function loadData() {
+      try {
+        const [summary, tasks, calls, doctors, appointments, retention, cfg] = await Promise.all([
+          fetch('/api/dashboard').then(r => r.json()),
+          fetch('/api/tasks').then(r => r.json()),
+          fetch('/api/call-log').then(r => r.json()),
+          fetch('/api/doctors').then(r => r.json()),
+          fetch('/api/appointments').then(r => r.json()),
+          fetch('/api/retention-queue').then(r => r.json()),
+          fetch('/api/config').then(r => r.json()).catch(() => ({ test_patient_phone: '' }))
+        ]);
+
+        CONFIG = cfg || CONFIG;
+
+        allCases = tasks.tasks || [];
+        allCalls = calls.calls || [];
+        allDoctors = doctors.doctors || [];
+        allAppointments = appointments.appointments || [];
+        allRetention = retention.retention_queue || [];
+
+        const clinicalCases = allCases.filter(c => ['appointment', 'escalation'].includes(c.case_type));
+        const patientMap = new Map();
+        clinicalCases.forEach(c => {
+          if (c.patient_key && !patientMap.has(c.patient_key)) {
+            patientMap.set(c.patient_key, {
+              patient_key: c.patient_key,
+              patient_name: c.patient_name,
+              phone_number: c.phone_number,
+              latest_issue: c.details?.health_issue || c.title,
+              latest_doctor: c.details?.doctor_name,
+              last_case_date: timeAgo(c.created_at)
+            });
+          }
+        });
+        allPatients = Array.from(patientMap.values());
+
+        const todaysCalls = allCalls.filter(c => isToday(c.started_at));
+        const inbound = todaysCalls.filter(c => c.direction === 'inbound').length;
+        const outbound = todaysCalls.filter(c => c.direction === 'outbound').length;
+
+        document.getElementById('totalPatients').textContent = allPatients.length;
+        document.getElementById('callsToday').textContent = todaysCalls.length;
+        document.getElementById('callsBreakdown').textContent = inbound + ' inbound, ' + outbound + ' outbound';
+        document.getElementById('totalCases').textContent = clinicalCases.length;
+        document.getElementById('totalDoctors').textContent = allDoctors.length;
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+        renderTodaysCalls(todaysCalls);
+        renderPatientsList();
+        renderNewPatients();
+        renderCases();
+        renderDoctors();
+        renderAppointments();
+        renderOutbound();
+        renderRetention();
+        renderAllCalls();
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    }
+
+    function renderTodaysCalls(calls) {
+      const tbody = document.getElementById('todaysCallsTable');
+      if (!calls.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">No calls today yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = calls.map(c => `
+        <tr>
+          <td>${c.patient_key || 'Unknown'}</td>
+          <td>${displayPhone()}</td>
+          <td>${c.call_type || '—'}</td>
+          <td>${badge(c.direction, c.direction)}</td>
+          <td>${timeAgo(c.started_at)}</td>
+          <td>${formatDuration(c.duration_seconds)}</td>
+          <td>${badge(c.outcome, (c.outcome || 'unknown').replace(/_/g, ' '))}</td>
+        </tr>
       `).join('');
     }
 
-    function renderCases(cases) {
-      const body = document.getElementById('casesBody');
-      if (!cases.length) {
-        body.innerHTML = `<tr><td colspan="6" class="empty">No cases yet.</td></tr>`;
+    function renderPatientsList() {
+      const tbody = document.getElementById('patientsListTable');
+      if (!allPatients.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">No patients</td></tr>';
         return;
       }
-      body.innerHTML = cases.map(c => `
+      tbody.innerHTML = allPatients.map(p => `
+        <tr onclick="showPatientDetail('${p.patient_key}')" style="cursor: pointer;">
+          <td class="patient-name">${p.patient_name || p.patient_key}</td>
+          <td>${displayPhone()}</td>
+          <td><strong>${p.latest_issue || '—'}</strong></td>
+          <td>${p.latest_doctor || '—'}</td>
+          <td>${p.last_case_date}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderNewPatients() {
+      const tbody = document.getElementById('newPatientsTable');
+      const today = new Date().toISOString().split('T')[0];
+      const newPatientCalls = allCalls.filter(c => c.started_at && c.started_at.includes(today)).sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+      const uniqueNewPatients = [];
+      const seenKeys = new Set();
+      for (const call of newPatientCalls) {
+        if (!seenKeys.has(call.patient_key)) {
+          seenKeys.add(call.patient_key);
+          uniqueNewPatients.push(call);
+        }
+      }
+
+      if (!uniqueNewPatients.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">No new patients today</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = uniqueNewPatients.map(call => {
+        const patientCases = allCases.filter(c => c.patient_key === call.patient_key && ['appointment', 'escalation'].includes(c.case_type));
+        const healthIssue = patientCases.length > 0 ? (patientCases[0].details?.health_issue || '—') : '—';
+        const doctor = patientCases.length > 0 ? (patientCases[0].details?.doctor_name || '—') : '—';
+        const patientName = call.patient_key || 'Unknown';
+        return `
         <tr>
-          <td>${badge(CASE_TYPE_BADGE[c.case_type], c.case_type)}</td>
-          <td class="name-cell"><strong>${c.patient_name || c.patient_key || 'Unknown'}</strong><span>${c.phone_number || ''}</span></td>
-          <td>${c.title || ''}${c.details && Object.keys(c.details).length ? `<div style="color:var(--muted); font-size:12px; margin-top:4px;">${Object.entries(c.details).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(' · ')}</div>` : ''}</td>
-          <td>${badge(PRIORITY_BADGE[c.priority], c.priority || 'normal')}</td>
-          <td>${badge(STATUS_BADGE[c.status], c.status || 'new')}</td>
+          <td><span class="patient-name" onclick="showPatientDetail('${call.patient_key}')">${patientName}</span></td>
+          <td>${displayPhone()}</td>
+          <td>${healthIssue}</td>
+          <td>${doctor}</td>
+          <td>${new Date(call.started_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${patientName.replace(/'/g, "\\'")}', '${call.patient_key}')" title="Call patient">📞</span></td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    function showPatientDetail(patientKey) {
+      selectedPatientKey = patientKey;
+      document.getElementById('patientModal').style.display = 'block';
+      renderPatientDetail();
+    }
+
+    function renderPatientDetail() {
+      if (!selectedPatientKey) return;
+      const patient = allPatients.find(p => p.patient_key === selectedPatientKey);
+      if (!patient) return;
+      const patientCalls = allCalls.filter(c => c.patient_key === selectedPatientKey);
+      const patientCases = allCases.filter(c => c.patient_key === selectedPatientKey && ['appointment', 'escalation'].includes(c.case_type));
+
+      document.getElementById('modalPatientName').textContent = patient.patient_name || patient.patient_key;
+      document.getElementById('modalPatientInfo').textContent = displayPhone() + ' • ' + patient.patient_key;
+      document.getElementById('modalPatientBasicInfo').innerHTML = `
+        <div><strong>Name:</strong> ${patient.patient_name || 'Unknown'}</div>
+        <div style="margin-top: 8px;"><strong>Phone:</strong> ${displayPhone()}</div>
+        <div style="margin-top: 8px;"><strong>Patient ID:</strong> ${patient.patient_key}</div>
+        <div style="margin-top: 8px;"><strong>Status:</strong> <span style="color: var(--success); font-weight: 600;">Active</span></div>
+      `;
+      document.getElementById('modalPatientCallSummary').innerHTML = `
+        <div><strong>Total Calls:</strong> ${patientCalls.length}</div>
+        <div style="margin-top: 8px;"><strong>Inbound:</strong> ${patientCalls.filter(c => c.direction === 'inbound').length}</div>
+        <div style="margin-top: 8px;"><strong>Outbound:</strong> ${patientCalls.filter(c => c.direction === 'outbound').length}</div>
+        <div style="margin-top: 8px;"><strong>Last Call:</strong> ${patientCalls.length > 0 ? timeAgo(patientCalls[0].started_at) : 'Never'}</div>
+      `;
+
+      const casesBody = document.getElementById('modalPatientCasesTable');
+      casesBody.innerHTML = !patientCases.length ? '<tr><td colspan="5" class="empty">No cases</td></tr>' : patientCases.map(c => `
+        <tr>
+          <td><strong>${c.details?.health_issue || c.title || '—'}</strong></td>
+          <td>${c.details?.doctor_name || '—'}</td>
+          <td>${badge(c.priority === 'urgent' ? 'urgent' : 'new', (c.priority || 'normal').toUpperCase())}</td>
+          <td>${badge('new', (c.status || 'new').toUpperCase())}</td>
+          <td>${timeAgo(c.created_at)}</td>
+        </tr>
+      `).join('');
+
+      const callsBody = document.getElementById('modalPatientCallsTable');
+      callsBody.innerHTML = !patientCalls.length ? '<tr><td colspan="5" class="empty">No calls</td></tr>' : patientCalls.slice(0, 10).map(c => `
+        <tr>
+          <td>${c.call_type || '—'}</td>
+          <td>${badge(c.direction, c.direction)}</td>
+          <td>${new Date(c.started_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${formatDuration(c.duration_seconds)}</td>
+          <td>${badge(c.outcome === 'answered' ? 'answered' : 'new', (c.outcome || 'unknown').replace(/_/g, ' '))}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCases() {
+      const tbody = document.getElementById('casesTable');
+      const clinicalCases = allCases.filter(c => ['appointment', 'escalation'].includes(c.case_type));
+      tbody.innerHTML = !clinicalCases.length ? '<tr><td colspan="6" class="empty">No cases</td></tr>' : clinicalCases.map(c => `
+        <tr>
+          <td>${c.patient_name || c.patient_key}</td>
+          <td><strong>${c.details?.health_issue || c.title || '—'}</strong></td>
+          <td>${c.details?.doctor_name || '—'}</td>
+          <td>${badge(c.priority === 'urgent' ? 'urgent' : 'new', (c.priority || 'normal').toUpperCase())}</td>
+          <td>${badge('new', (c.status || 'new').toUpperCase())}</td>
           <td>${timeAgo(c.created_at)}</td>
         </tr>
       `).join('');
     }
 
-    function renderCalls(calls) {
-      const body = document.getElementById('callsBody');
-      if (!calls.length) {
-        body.innerHTML = `<tr><td colspan="6" class="empty">No calls logged yet.</td></tr>`;
-        return;
-      }
-      body.innerHTML = calls.map(c => `
+    function renderDoctors() {
+      const tbody = document.getElementById('doctorsTable');
+      tbody.innerHTML = !allDoctors.length ? '<tr><td colspan="3" class="empty">No doctors</td></tr>' : allDoctors.map(d => `
         <tr>
-          <td class="name-cell"><strong>${c.patient_key || 'Unknown'}</strong><span>${c.phone_number || ''}</span></td>
-          <td>${c.direction || ''}</td>
-          <td>${c.call_type || ''}</td>
+          <td>${d.name}</td>
+          <td>${d.specialty || '—'}</td>
+          <td>${d.working_days || '—'} · ${d.work_start || '—'}–${d.work_end || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAppointments() {
+      const tbody = document.getElementById('appointmentsTable');
+      tbody.innerHTML = !allAppointments.length ? '<tr><td colspan="5" class="empty">No appointments</td></tr>' : allAppointments.map(a => `
+        <tr>
+          <td>${a.patient_name || a.patient_key}</td>
+          <td>${a.doctor_name || '—'}</td>
+          <td>${new Date(a.scheduled_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${a.reason || '—'}</td>
+          <td>${badge('new', (a.status || 'booked').toUpperCase())}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderOutbound() {
+      const tbody = document.getElementById('outboundTable');
+      tbody.innerHTML = !allRetention.length ? '<tr><td colspan="7" class="empty">No patients</td></tr>' : allRetention.map(r => {
+        const patientCases = allCases.filter(c => c.patient_key === r.patient_key && ['appointment', 'escalation'].includes(c.case_type));
+        const healthIssue = patientCases.length > 0 ? (patientCases[0].details?.health_issue || '—') : '—';
+        const doctor = patientCases.length > 0 ? (patientCases[0].details?.doctor_name || '—') : '—';
+        const isCallActive = activeCall && activeCall.patientKey === r.patient_key;
+        let statusBadge;
+        if (isCallActive && activeCall.status === 'in_call') {
+          statusBadge = '<span class="call-status-badge active">🟢 IN CALL</span>';
+        } else if (isCallActive) {
+          statusBadge = '<span class="call-status-badge active">📞 RINGING…</span>';
+        } else {
+          statusBadge = badge('new', (r.retention_status || 'pending').toUpperCase());
+        }
+        return `
+        <tr>
+          <td><span class="patient-name" onclick="showPatientDetail('${r.patient_key}')">${r.name || r.patient_key}</span></td>
+          <td>${displayPhone()}</td>
+          <td>${healthIssue}</td>
+          <td>${doctor}</td>
+          <td>${r.retention_reason || '—'}</td>
+          <td>${statusBadge}</td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${(r.name || r.patient_key).replace(/'/g, "\\'")}', '${r.patient_key}', '${(r.retention_reason || '').replace(/'/g, "\\'")}')" title="Call patient">📞</span></td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    function renderRetention() {
+      const tbody = document.getElementById('retentionTable');
+      tbody.innerHTML = !allRetention.length ? '<tr><td colspan="5" class="empty">No items</td></tr>' : allRetention.map(r => `
+        <tr>
+          <td>${r.name || r.patient_key}</td>
+          <td>${r.next_retention_due_date || '—'}</td>
+          <td>${r.retention_reason || '—'}</td>
+          <td>${r.retention_attempts || 0}</td>
+          <td>${badge('new', (r.retention_status || 'pending').toUpperCase())}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAllCalls() {
+      const tbody = document.getElementById('allCallsTable');
+      tbody.innerHTML = !allCalls.length ? '<tr><td colspan="10" class="empty">No calls</td></tr>' : allCalls.slice(0, 30).map(c => {
+        const patientCases = allCases.filter(cse => cse.patient_key === c.patient_key && ['appointment', 'escalation'].includes(cse.case_type));
+        const healthIssue = patientCases.length > 0 ? (patientCases[0].details?.health_issue || '—') : '—';
+        const doctor = patientCases.length > 0 ? (patientCases[0].details?.doctor_name || '—') : '—';
+        return `
+        <tr>
+          <td><span class="patient-name" onclick="showPatientDetail('${c.patient_key}')">${c.patient_key || 'Unknown'}</span></td>
+          <td>${displayPhone()}</td>
+          <td>${healthIssue}</td>
+          <td>${doctor}</td>
+          <td>${c.call_type || '—'}</td>
+          <td>${badge(c.direction, c.direction)}</td>
           <td>${timeAgo(c.started_at)}</td>
-          <td>${c.duration_seconds ? Math.round(c.duration_seconds) + 's' : '—'}</td>
-          <td>${badge(OUTCOME_BADGE[c.outcome], c.outcome || 'unknown')}</td>
+          <td>${formatDuration(c.duration_seconds)}</td>
+          <td>${badge(c.outcome, (c.outcome || 'unknown').replace(/_/g, ' '))}</td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${(c.patient_key || 'Patient').replace(/'/g, "\\'")}', '${c.patient_key}')" title="Call patient">📞</span></td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
-    function renderRetention(queue) {
-      const body = document.getElementById('retentionBody');
-      if (!queue.length) {
-        body.innerHTML = `<tr><td colspan="4" class="empty">No patients currently due.</td></tr>`;
-        return;
-      }
-      body.innerHTML = queue.map(p => `
-        <tr>
-          <td class="name-cell"><strong>${p.name || p.patient_key}</strong><span>${p.retention_reason || 'no reason set'}</span></td>
-          <td>${p.next_retention_due_date || '—'}</td>
-          <td>${p.retention_attempts || 0}</td>
-          <td>${badge(STATUS_BADGE[p.retention_status], p.retention_status || 'pending')}</td>
-        </tr>
-      `).join('');
-    }
-
-    async function loadAll() {
-      renderTabs();
-      const [summary, tasksRes, retentionRes, callsRes] = await Promise.all([
-        fetch('/api/dashboard').then(r => r.json()),
-        fetch('/api/tasks' + (activeCaseType ? `?case_type=${activeCaseType}` : '')).then(r => r.json()),
-        fetch('/api/retention-queue').then(r => r.json()),
-        fetch('/api/call-log').then(r => r.json()),
-      ]);
-
-      const calls = callsRes.calls || [];
-      const queue = retentionRes.retention_queue || [];
-      const callsToday = calls.filter(c => isToday(c.started_at)).length;
-      const retentionDueToday = queue.filter(p => p.next_retention_due_date && isToday(p.next_retention_due_date + 'T00:00:00')).length;
-
-      renderKpis(summary, callsToday, retentionDueToday);
-      renderCases(tasksRes.tasks || []);
-      renderCalls(calls);
-      renderRetention(queue);
-      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
-    }
-
-    document.getElementById('refreshBtn').addEventListener('click', loadAll);
-    loadAll();
-    setInterval(loadAll, 10000);
+    document.getElementById('refreshBtn').addEventListener('click', loadData);
+    document.getElementById('patientModal').addEventListener('click', (e) => {
+      if (e.target.id === 'patientModal') closePatientModal();
+    });
+    renderTabs();
+    loadData();
+    setInterval(loadData, 10000);
   </script>
 </body>
 </html>

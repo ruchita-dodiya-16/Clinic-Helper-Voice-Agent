@@ -62,3 +62,32 @@ class CallLog(Base):
     duration_seconds: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
     outcome: Mapped[str] = mapped_column(String, default="", server_default="")
     transcript_summary: Mapped[str] = mapped_column(Text, default="", server_default="")
+
+
+class Doctor(Base):
+    __tablename__ = "doctors"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
+    specialty: Mapped[str] = mapped_column(String, default="", server_default="")
+    working_days: Mapped[str] = mapped_column(
+        String, default="Mon,Tue,Wed,Thu,Fri", server_default="Mon,Tue,Wed,Thu,Fri"
+    )
+    work_start: Mapped[str] = mapped_column(String, default="09:00", server_default="09:00")
+    work_end: Mapped[str] = mapped_column(String, default="17:00", server_default="17:00")
+    slot_minutes: Mapped[int] = mapped_column(Integer, default=30, server_default="30")
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    patient_key: Mapped[str] = mapped_column(ForeignKey("patients.patient_key"))
+    patient_name: Mapped[str] = mapped_column(String, default="", server_default="")
+    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id"))
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    duration_minutes: Mapped[int] = mapped_column(Integer, default=30, server_default="30")
+    reason: Mapped[str] = mapped_column(String, default="", server_default="")
+    status: Mapped[str] = mapped_column(String, default="booked", server_default="booked")

@@ -3,161 +3,230 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CareConnect Voice - Microphone Demo</title>
+  <title>CareConnect - Schedule a Call</title>
   <style>
     :root {
-      --bg: #effaf7;
+      --bg: #f7f9fc;
       --card: #ffffff;
-      --text: #102a43;
-      --muted: #627d98;
-      --primary: #0f766e;
-      --primary-dark: #115e59;
-      --danger: #b91c1c;
-      --border: rgba(15, 118, 110, 0.16);
-      --shadow: 0 26px 80px rgba(16, 42, 67, 0.16);
+      --text: #1a2332;
+      --text-secondary: #576375;
+      --primary: #1565c0;
+      --primary-dark: #0f4c7a;
+      --border: #e1e8ed;
+      --success: #059669;
+      --shadow: 0 2px 8px rgba(26, 35, 50, 0.06);
+      --shadow-lg: 0 8px 24px rgba(26, 35, 50, 0.10);
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, .22), transparent 30%),
-        radial-gradient(circle at 88% 18%, rgba(45, 212, 191, .28), transparent 32%),
-        linear-gradient(135deg, var(--bg), #f7fbff);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .app { max-width: 1180px; margin: 0 auto; padding: 30px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 26px; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .mark { width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg, var(--primary), #14b8a6); color: white; display: grid; place-items: center; font-size: 28px; font-weight: 900; box-shadow: 0 14px 32px rgba(15,118,110,.25); }
-    .title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
-    .sub { color: var(--muted); font-size: 13px; }
-    .pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: rgba(255,255,255,.8); border-radius: 999px; padding: 10px 14px; color: var(--primary-dark); font-weight: 800; }
-    .pulse { width: 10px; height: 10px; border-radius: 999px; background: #22c55e; box-shadow: 0 0 0 7px rgba(34,197,94,.14); }
-    .grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(320px,.65fr); gap: 22px; align-items: stretch; }
-    .card { background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: 32px; box-shadow: var(--shadow); backdrop-filter: blur(18px); }
-    .hero { padding: 42px; }
-    .eyebrow { color: var(--primary); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 900; }
-    h1 { font-size: clamp(38px,6vw,66px); line-height: .96; letter-spacing: -.06em; margin: 14px 0; max-width: 760px; }
-    .copy { color: var(--muted); font-size: 18px; line-height: 1.55; max-width: 720px; }
-    label { display: block; font-weight: 850; margin-top: 18px; }
-    input { width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(98,125,152,.25); margin-top: 8px; outline: none; font: inherit; }
-    input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(15,118,110,.11); }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; align-items: center; }
-    button { border: 0; border-radius: 16px; padding: 14px 18px; font-weight: 900; cursor: pointer; }
-    .primary { color: white; background: linear-gradient(135deg, var(--primary), #0891b2); box-shadow: 0 18px 40px rgba(15,118,110,.22); }
-    .secondary { color: var(--primary-dark); background: rgba(15,118,110,.10); }
-    button:disabled { opacity: .55; cursor: not-allowed; }
-    .side { display: grid; gap: 18px; }
-    .panel { padding: 24px; }
-    .panel p { color: var(--muted); line-height: 1.5; }
-    .danger { background: linear-gradient(135deg, #fff, #fff1f2); }
-    .row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(98,125,152,.12); }
-    .row:last-child { border-bottom: 0; }
-    .check { width: 28px; height: 28px; border-radius: 999px; background: rgba(15,118,110,.12); color: var(--primary); display: grid; place-items: center; font-weight: 900; flex: 0 0 28px; }
-    .row strong { display: block; }
-    .row span { color: var(--muted); font-size: 14px; line-height: 1.4; }
-    .session { display: none; padding: 30px; }
-    .session.active { display: block; }
-    .stage { min-height: 300px; display: grid; place-items: center; text-align: center; padding: 30px; border-radius: 28px; margin-top: 20px; border: 1px solid rgba(15,118,110,.14); background: radial-gradient(circle at 50% 35%, rgba(20,184,166,.15), transparent 30%), linear-gradient(135deg, #fff, #effdfa); }
-    .mic { width: 90px; height: 90px; display: grid; place-items: center; border-radius: 30px; background: white; box-shadow: 0 18px 40px rgba(15,118,110,.16); font-size: 38px; margin: 0 auto 14px; }
-    .status { color: var(--muted); line-height: 1.5; }
-    .flow { margin-top: 20px; padding: 18px; border-radius: 22px; background: rgba(15,118,110,.07); border: 1px solid var(--border); }
-    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-    .chip { padding: 9px 12px; border-radius: 999px; background: white; font-size: 13px; font-weight: 850; }
-    .log { max-height: 240px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #334e68; background: rgba(255,255,255,.76); border-radius: 18px; padding: 14px; margin-top: 18px; border: 1px solid rgba(98,125,152,.14); }
-    .hidden { display: none; }
-    .error { color: var(--danger); margin-top: 14px; font-weight: 800; }
-    @media (max-width: 900px) { .app { padding: 18px; } .topbar, .grid { display: block; } .hero { padding: 26px; margin-bottom: 18px; } .pill { margin-top: 12px; } }
+    .container {
+      width: 100%;
+      max-width: 500px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      display: none;
+    }
+    .card.active { display: block; animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .header { margin-bottom: 30px; }
+    .icon { font-size: 48px; margin-bottom: 15px; }
+    .title { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .subtitle { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+
+    .input-group { margin-bottom: 20px; }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fafbfc;
+      transition: all 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+    }
+    input::placeholder { color: var(--text-secondary); }
+
+    .button-group { display: flex; flex-direction: column; gap: 12px; }
+    button {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+    }
+    .btn-primary:hover { background: var(--primary-dark); box-shadow: 0 6px 16px rgba(21, 101, 192, 0.3); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #f5f7fa;
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #eef2f7; }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: #f5f7fa; }
+
+    .error { color: #dc2626; font-size: 13px; margin-top: 12px; font-weight: 600; }
+
+    /* Patient Selection Cards */
+    .patient-type-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; }
+    .patient-card {
+      padding: 20px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: #fafbfc;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+    }
+    .patient-card:hover {
+      border-color: var(--primary);
+      background: #f0f5ff;
+      box-shadow: var(--shadow);
+    }
+    .patient-card.selected {
+      border-color: var(--primary);
+      background: #f0f5ff;
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+    }
+    .patient-card-icon { font-size: 32px; margin-bottom: 10px; }
+    .patient-card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .patient-card-desc { font-size: 13px; color: var(--text-secondary); }
+
+    .mic-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .status-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
+    .status-connecting { color: var(--primary); font-weight: 600; }
+
+    .nav-link {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .nav-link a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-link a:hover { color: var(--primary); }
+
+    @media (max-width: 480px) {
+      .card { padding: 30px 20px; }
+      .title { font-size: 24px; }
+      button { font-size: 14px; padding: 12px 16px; }
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="mark">+</div>
-        <div>
-          <div class="title">CareConnect Voice</div>
-          <div class="sub">Microphone-based LiveKit healthcare helper</div>
+  <div class="container">
+    <!-- Landing: Welcome -->
+    <section id="landing" class="card active">
+      <div class="header">
+        <div style="font-size: 48px; margin-bottom: 15px;">☎️</div>
+        <h1 class="title">Welcome to CareConnect</h1>
+        <p class="subtitle">Talk to our clinic assistant for appointments, questions, or callbacks.</p>
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" id="continueBtn">Start Inbound Call</button>
+      </div>
+      <div class="nav-link"><a href="/">← Back to Staff Dashboard</a></div>
+    </section>
+
+    <!-- Patient Type Selection -->
+    <section id="patientType" class="card stage">
+      <div class="header">
+        <div style="font-size: 48px; margin-bottom: 15px;">👤</div>
+        <h1 class="title">Patient Status</h1>
+        <p class="subtitle">Are you a new or returning patient?</p>
+      </div>
+      <div class="patient-type-grid">
+        <div class="patient-card" id="newCard" onclick="selectPatientType('new')">
+          <div class="patient-card-icon">✨</div>
+          <div class="patient-card-title">New Patient</div>
+          <div class="patient-card-desc">First time calling the clinic</div>
+        </div>
+        <div class="patient-card" id="returningCard" onclick="selectPatientType('returning')">
+          <div class="patient-card-icon">🔖</div>
+          <div class="patient-card-title">Returning Patient</div>
+          <div class="patient-card-desc">Already a clinic patient</div>
         </div>
       </div>
-      <div class="actions" style="margin:0;">
-        <a class="secondary" style="text-decoration:none; display:inline-flex; align-items:center; padding:12px 16px; border-radius:16px;" href="/dashboard">Staff dashboard →</a>
-        <div class="pill"><span class="pulse"></span> LiveKit + Cartesia + Claude Haiku</div>
+      <div id="typeError" class="error"></div>
+    </section>
+
+    <!-- Returning Patient: Ask Name -->
+    <section id="returningNameStage" class="card stage">
+      <div class="header">
+        <div style="font-size: 48px; margin-bottom: 15px;">👋</div>
+        <h1 class="title">Welcome Back!</h1>
+        <p class="subtitle">Please provide your name so we can access your information.</p>
       </div>
-    </header>
-
-    <main id="landing" class="grid">
-      <section class="card hero">
-        <div class="eyebrow">Browser microphone demo</div>
-        <h1>Talk to the clinic helper from your browser.</h1>
-        <p class="copy">This is the same helper patients reach by phone (once Twilio + LiveKit SIP is configured) — it remembers returning callers, routes appointments/callbacks/escalations/retention/feedback, and can live-transfer urgent issues to staff. This page joins over your browser microphone instead of a phone line, for testing without a live number.</p>
-
-        <label>Your name
-          <input id="participantName" value="Patient" />
-        </label>
-        <label>Optional room name
-          <input id="roomName" placeholder="Leave blank for auto room" />
-        </label>
-        <div class="actions">
-          <button id="startBtn" class="primary">Start voice session</button>
-          <span id="startError" class="error"></span>
-        </div>
-
-        <div class="flow">
-          <div class="eyebrow">Try saying</div>
-          <div class="chips">
-            <span class="chip">I want to book an appointment</span>
-            <span class="chip">What are your clinic hours?</span>
-            <span class="chip">I need medical advice</span>
-            <span class="chip">Can someone call me back?</span>
-          </div>
-        </div>
-      </section>
-
-      <aside class="side">
-        <section class="card panel danger">
-          <div class="eyebrow">Safety guardrail</div>
-          <p>This is a helper, not a doctor replacement. It should not diagnose, prescribe, recommend medication, or answer urgent clinical questions.</p>
-        </section>
-        <section class="card panel">
-          <div class="eyebrow">V1 scope</div>
-          <div class="row"><div class="check">✓</div><div><strong>Scheduling</strong><span>Book, reschedule, cancel, confirm requests.</span></div></div>
-          <div class="row"><div class="check">✓</div><div><strong>FAQ</strong><span>Hours, location, pricing, policies, memberships.</span></div></div>
-          <div class="row"><div class="check">✓</div><div><strong>Escalation</strong><span>Urgent issues log a case and live-transfer to staff.</span></div></div>
-          <div class="row"><div class="check">✓</div><div><strong>Retention</strong><span>Follow-up reminders, and automated outbound re-engagement calls.</span></div></div>
-          <div class="row"><div class="check">✓</div><div><strong>Memory</strong><span>Returning callers are recognized and greeted by name.</span></div></div>
-        </section>
-      </aside>
-    </main>
-
-    <section id="session" class="card session">
-      <div class="topbar" style="margin-bottom:0;">
-        <div>
-          <div class="eyebrow">Connected room</div>
-          <h2 id="roomTitle">Voice session</h2>
-          <div id="sessionStatus" class="status">Connecting...</div>
-        </div>
-        <button id="leaveBtn" class="secondary">Leave</button>
+      <div class="input-group">
+        <input id="returningPatientName" placeholder="Enter your full name" type="text" />
       </div>
-      <div class="stage">
-        <div>
-          <div class="mic">🎙️</div>
-          <h2>Voice helper active</h2>
-          <p class="status">Keep your microphone allowed and speak naturally. The agent should greet you after joining.</p>
-          <div class="actions" style="justify-content:center;">
-            <button id="muteBtn" class="secondary">Mute mic</button>
-          </div>
-        </div>
+      <div class="button-group">
+        <button class="btn-primary" id="startCallBtn">Start Call</button>
       </div>
-      <div class="flow">
-        <div class="eyebrow">Workflow</div>
-        <div class="chips">
-          <span class="chip">Browser mic</span><span class="chip">LiveKit</span><span class="chip">Cartesia STT</span><span class="chip">Claude Haiku</span><span class="chip">Cartesia TTS</span><span class="chip">Postgres</span>
-        </div>
+      <div id="nameError" class="error"></div>
+    </section>
+
+    <!-- Active Call -->
+    <section id="session" class="card stage">
+      <div class="mic-icon">🎙️</div>
+      <h1 class="title" id="roomTitle">Connected</h1>
+      <p class="status-text"><span class="status-connecting" id="sessionStatus">Connecting...</span></p>
+      <div class="button-group">
+        <button class="btn-secondary" id="muteBtn">🔊 Mute</button>
+        <button class="btn-outline" id="leaveBtn">End Call</button>
       </div>
-      <pre id="debugLog" class="log"></pre>
     </section>
   </div>
 
@@ -168,16 +237,12 @@
     let room = null;
     let micTrack = null;
     let muted = false;
+    let selectedPatientType = null;
+    let callInProgress = false;  // guards against double-click starting two calls
 
-    const landing = document.getElementById('landing');
-    const session = document.getElementById('session');
-    const logEl = document.getElementById('debugLog');
-    const startError = document.getElementById('startError');
-
-    function log(msg) {
-      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      logEl.textContent = line + '\n' + logEl.textContent;
-      console.log(line);
+    function showStage(stageId) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+      document.getElementById(stageId).classList.add('active');
     }
 
     function attachAudio(track) {
@@ -186,40 +251,78 @@
       el.playsInline = true;
       el.dataset.remoteAudio = 'true';
       document.body.appendChild(el);
-      el.play().catch(() => log('Browser blocked autoplay; click anywhere or restart session.'));
+      el.play().catch(() => {});
     }
 
-    async function start() {
-      startError.textContent = '';
-      document.getElementById('startBtn').disabled = true;
+    function selectPatientType(type) {
+      // Selecting a card immediately advances — no Continue/Back needed.
+      selectedPatientType = type;
+      document.getElementById('typeError').textContent = '';
+      if (type === 'new') {
+        startCall('new');
+      } else {
+        showStage('returningNameStage');
+      }
+    }
+
+    function goBack() {
+      selectedPatientType = null;
+      document.getElementById('newCard').classList.remove('selected');
+      document.getElementById('returningCard').classList.remove('selected');
+      document.getElementById('typeError').textContent = '';
+      document.getElementById('nameError').textContent = '';
+      showStage('landing');
+    }
+
+    async function startCall(type) {
+      // Hard guard: never start a second call while one is starting/active.
+      // (A double-click would otherwise open two rooms -> two agents -> echo.)
+      if (callInProgress) return;
+      callInProgress = true;
+
+      const startBtn = document.getElementById('startCallBtn');
+      const continueBtn = document.getElementById('continueBtn');
+      const activeBtn = type === 'new' ? continueBtn : startBtn;
+
+      if (activeBtn) activeBtn.disabled = true;
+
       try {
-        const participantName = document.getElementById('participantName').value || 'Patient';
-        const roomName = document.getElementById('roomName').value || null;
-        logEl.textContent = '';
+        let participantName = '';
+
+        if (type === 'new') {
+          // No fake name — a new caller has no name yet. The agent greets them
+          // professionally without inventing/echoing a placeholder name.
+          participantName = '';
+        } else {
+          participantName = document.getElementById('returningPatientName').value || '';
+          if (!participantName) {
+            document.getElementById('nameError').textContent = 'Please enter your name';
+            if (activeBtn) activeBtn.disabled = false;
+            callInProgress = false;
+            return;
+          }
+        }
+
+        document.getElementById('nameError').textContent = '';
 
         const res = await fetch('/api/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participant_name: participantName, room_name: roomName })
+          body: JSON.stringify({ participant_name: participantName, patient_type: type })
         });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) throw new Error('Could not start the call. Please try again.');
         const data = await res.json();
 
-        landing.classList.add('hidden');
-        session.classList.add('active');
-        document.getElementById('roomTitle').textContent = data.room_name;
-        document.getElementById('sessionStatus').textContent = 'Connecting to LiveKit...';
+        showStage('session');
+        document.getElementById('sessionStatus').textContent = 'Connecting...';
 
         room = new Room({ adaptiveStream: true, dynacast: true });
-        room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-          log(`Subscribed to ${track.kind} from ${participant.identity}`);
+        room.on(RoomEvent.TrackSubscribed, (track) => {
           if (track.kind === 'audio') attachAudio(track);
         });
-        room.on(RoomEvent.ParticipantConnected, (participant) => log(`Participant connected: ${participant.identity}`));
-        room.on(RoomEvent.Disconnected, () => log('Disconnected from LiveKit'));
+        room.on(RoomEvent.Disconnected, () => leave());
 
         await room.connect(data.livekit_url, data.token);
-        log('Connected to LiveKit room');
 
         micTrack = await createLocalAudioTrack({
           echoCancellation: true,
@@ -227,15 +330,14 @@
           autoGainControl: true
         });
         await room.localParticipant.publishTrack(micTrack);
-        log('Microphone published');
-        document.getElementById('sessionStatus').textContent = 'Connected. Speak to the clinic helper.';
+        document.getElementById('sessionStatus').textContent = 'Connected — go ahead and talk.';
       } catch (err) {
         console.error(err);
-        startError.textContent = ' ' + (err.message || 'Failed to start session');
-        landing.classList.remove('hidden');
-        session.classList.remove('active');
+        document.getElementById('nameError').textContent = err.message || 'Something went wrong. Please try again.';
+        showStage('landing');
+        callInProgress = false;  // allow retry after a failed start
       } finally {
-        document.getElementById('startBtn').disabled = false;
+        if (activeBtn) activeBtn.disabled = false;
       }
     }
 
@@ -243,19 +345,22 @@
       if (micTrack) { micTrack.stop(); micTrack = null; }
       if (room) { await room.disconnect(); room = null; }
       document.querySelectorAll('[data-remote-audio="true"]').forEach(el => el.remove());
-      landing.classList.remove('hidden');
-      session.classList.remove('active');
+      selectedPatientType = null;
+      callInProgress = false;  // call ended — a new one can start
+      document.getElementById('returningPatientName').value = '';
+      showStage('landing');
     }
 
     async function toggleMute() {
       if (!micTrack) return;
       muted = !muted;
       await micTrack.mute(muted);
-      document.getElementById('muteBtn').textContent = muted ? 'Unmute mic' : 'Mute mic';
-      log(muted ? 'Microphone muted' : 'Microphone unmuted');
+      const btn = document.getElementById('muteBtn');
+      btn.textContent = muted ? '🔇 Unmute' : '🔊 Mute';
     }
 
-    document.getElementById('startBtn').addEventListener('click', start);
+    document.getElementById('continueBtn').addEventListener('click', () => showStage('patientType'));
+    document.getElementById('startCallBtn').addEventListener('click', () => startCall('returning'));
     document.getElementById('leaveBtn').addEventListener('click', leave);
     document.getElementById('muteBtn').addEventListener('click', toggleMute);
   </script>

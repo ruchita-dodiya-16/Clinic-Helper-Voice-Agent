@@ -1,4 +1,23 @@
+# CareConnect Voice — each service runs in its own container.
+#
+# Run everything:            docker compose up --build
+# Run one service:           docker compose up api        (db + migrate come up automatically)
+#                            docker compose up agent
+#                            docker compose up retention
+# Seed demo data (one-off):  docker compose --profile seed up seed
+# Stop everything:           docker compose down
+#
+# All Python services share ONE image (built from ./Dockerfile) and differ only
+# by their command. App secrets come from .env; the DB URL is set here so the
+# services talk to the `db` container on the internal network.
+
+x-app-env: &app-env
+  # Point the app at the Postgres container (internal port 5432), overriding the
+  # localhost default in src/settings.py.
+  DATABASE_URL: postgresql+asyncpg://careconnect:careconnect@db:5432/careconnect
+
 services:
+  # --- PostgreSQL database ---
   db:
     image: postgres:16
     restart: unless-stopped
@@ -15,6 +34,78 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # --- Database migrations (runs once, then exits) ---
+  migrate:
+    build: .
+    command: python -m alembic upgrade head
+    env_file: [.env]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  # --- FastAPI web server + dashboard/call UI (http://localhost:8000) ---
+  api:
+    build: .
+    command: python -m uvicorn src.api_server:app --host 0.0.0.0 --port 8000
+    env_file: [.env]
+    environment:
+      <<: *app-env
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # --- LiveKit voice agent worker (inbound/outbound calls) ---
+  agent:
+    build: .
+    # --log-level debug surfaces Cartesia STT/TTS connection + audio-frame
+    # activity so call issues are diagnosable. Drop to info once stable.
+    command: python -m src.agent start --log-level debug
+    env_file: [.env]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # --- Retention / re-engagement outbound worker ---
+  retention:
+    build: .
+    command: python -m src.retention_worker
+    env_file: [.env]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # --- One-off: seed demo doctors + patients/appointments ---
+  # Enabled only with the "seed" profile so it never runs on a normal `up`.
+  seed:
+    build: .
+    command: sh -c "python -m scripts.seed_doctors && python -m scripts.seed_data"
+    env_file: [.env]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    profiles: ["seed"]
+    restart: "no"
 
 volumes:
   careconnect_pgdata:
