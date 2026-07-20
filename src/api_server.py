@@ -114,11 +114,6 @@ async def dashboard_page():
     return FileResponse(STATIC_DIR / "dashboard.html")
 
 
-@app.get("/call")
-async def index():
-    return FileResponse(STATIC_DIR / "index.html")
-
-
 @app.get("/api/health")
 async def health():
     return {"ok": True, "agent_name": AGENT_NAME}

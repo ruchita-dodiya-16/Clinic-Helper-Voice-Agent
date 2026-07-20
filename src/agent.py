@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from datetime import datetime
 from typing import Any
 
@@ -165,6 +166,14 @@ Hard safety rules:
 - Avoid collecting unnecessary PHI. If details are needed, keep them minimal.
 - ALWAYS acknowledge FIRST before doing any tool calls — this makes latency feel natural.
 
+## Memory — remember the caller across calls
+You have long-term memory for each patient (shown under "What you know about this caller").
+- The MOMENT the caller shares a durable personal detail — their name, date of birth, a family
+  member, a preference ("I prefer mornings"), or an ongoing concern — save it: name via
+  save_patient_name, anything else via remember_about_patient. This is how you remember them next time.
+- On a later call you'll already have these facts — use them naturally ("Good to hear from you again,
+  Priya — still preferring morning slots?") and never re-ask something you already know.
+
 Allowed examples:
 - "Got it. Let me check our availability for you. I can help request an appointment. What day or time works best?"
 - "For a tooth problem, our dentist Dr. Rohan Shah is the right person — shall I check when he's free?"
@@ -294,17 +303,21 @@ def _summarize_call(history_text: str, previous_summary: str) -> str:
         client = Anthropic(api_key=ANTHROPIC_API_KEY)
         response = client.messages.create(
             model=ANTHROPIC_MODEL,
-            max_tokens=220,
+            max_tokens=320,
             messages=[
                 {
                     "role": "user",
                     "content": (
-                        "Condense the important, durable facts worth remembering about this "
-                        "patient into at most 3 short bullet points (name if known, ongoing "
-                        "concerns, preferences, appointment or retention context). Do not "
-                        "include a transcript or restate everything said.\n\n"
-                        f"Previous notes: {previous_summary or '(none)'}\n\n"
-                        f"Call transcript:\n{history_text}"
+                        "You maintain a patient's long-term memory for a clinic voice assistant. "
+                        "MERGE the previous notes with anything new from this call into a concise, "
+                        "durable memory (at most 6 short bullet points). CAPTURE and KEEP any "
+                        "personal details the caller shared — their name, age/DOB, family members, "
+                        "contact/time preferences, ongoing health concerns, which doctor they see, "
+                        "and appointment/retention context. Keep previously-known facts unless the "
+                        "caller corrected them. Do NOT include a transcript or restate small talk.\n\n"
+                        f"Previous notes:\n{previous_summary or '(none)'}\n\n"
+                        f"This call's transcript:\n{history_text}\n\n"
+                        "Return ONLY the updated bullet list."
                     ),
                 }
             ],
@@ -347,6 +360,13 @@ class HealthcareHelperAgent(Agent):
             **kwargs,
         )
 
+    async def _timed(self, label: str, coro: Any) -> Any:
+        """Await a DB/repository coroutine and log how long the query took."""
+        t = time.perf_counter()
+        result = await coro
+        log.info("⏱ QUERY | %s took %.0fms", label, (time.perf_counter() - t) * 1000)
+        return result
+
     def _filler(self, context: RunContext, text: str) -> None:
         """Speak a short 'hang on' line the INSTANT a task starts, so the caller
         never sits in silence while the DB/LLM work happens. Fire-and-forget
@@ -375,6 +395,25 @@ class HealthcareHelperAgent(Agent):
         return {"status": "saved", "name": name}
 
     @function_tool()
+    async def remember_about_patient(self, context: RunContext, note: str) -> dict[str, Any]:
+        """Save a durable personal detail the caller shares so you remember it on
+        FUTURE calls — e.g. their date of birth, a family member, a preference
+        ("prefers morning appointments"), or an ongoing concern.
+
+        Call this the moment the caller volunteers a personal fact worth keeping.
+        Not for one-off small talk. Appends the note to their long-term memory."""
+        note = (note or "").strip()
+        if not note:
+            return {"status": "empty"}
+        patient = await repository.get_patient(self.patient_key)
+        prev = (patient or {}).get("memory_summary", "") or ""
+        line = note if note.lstrip().startswith("-") else f"- {note}"
+        merged = (prev + "\n" + line).strip() if prev else line
+        merged = merged[:MEMORY_SUMMARY_MAX_CHARS]
+        await repository.update_patient_fields(self.patient_key, memory_summary=merged)
+        return {"status": "remembered", "note": note}
+
+    @function_tool()
     async def get_clinic_doctors(self, context: RunContext) -> dict[str, Any]:
         """List the clinic's doctors, their specialties and working hours.
 
@@ -382,7 +421,7 @@ class HealthcareHelperAgent(Agent):
         handles a certain issue, or the clinic's specialties.
         """
         self._filler(context, "Let me pull up our doctors for you, one moment.")
-        doctors = await repository.list_doctors()
+        doctors = await self._timed("list_doctors", repository.list_doctors())
         simplified = [
             {
                 "name": d.get("name"),
@@ -410,12 +449,12 @@ class HealthcareHelperAgent(Agent):
         call create_appointment_request to book.
         """
         self._filler(context, "Sure, let me check the schedule for you — one moment.")
-        slot = await repository.next_available_slot(
+        slot = await self._timed("next_available_slot", repository.next_available_slot(
             doctor_name=doctor_name,
             specialty=specialty,
             preferred_date=preferred_date,
             preferred_time_of_day=preferred_time_of_day,
-        )
+        ))
         if not slot:
             return {
                 "status": "no_availability",
@@ -436,7 +475,7 @@ class HealthcareHelperAgent(Agent):
     ) -> dict[str, Any]:
         """Book appointment with available doctor and time slot."""
         self._filler(context, "Great, let me get that booked for you — just a moment.")
-        booking = await repository.find_and_book_appointment(
+        booking = await self._timed("find_and_book_appointment", repository.find_and_book_appointment(
             patient_key=self.patient_key,
             patient_name=self.patient_name,
             reason=reason,
@@ -444,7 +483,7 @@ class HealthcareHelperAgent(Agent):
             preferred_time_of_day=preferred_time_of_day,
             doctor_name=doctor_name,
             specialty=specialty,
-        )
+        ))
         if not booking:
             return {
                 "status": "no_availability",
@@ -486,13 +525,13 @@ class HealthcareHelperAgent(Agent):
         appointment. Keeps the same doctor unless they ask for a different one.
         """
         self._filler(context, "Sure, let me move that appointment for you — one moment.")
-        result = await repository.reschedule_appointment(
+        result = await self._timed("reschedule_appointment", repository.reschedule_appointment(
             patient_key=self.patient_key,
             preferred_date=preferred_date,
             preferred_time_of_day=preferred_time_of_day,
             doctor_name=doctor_name,
             specialty=specialty,
-        )
+        ))
         if not result:
             return {
                 "status": "no_availability",
@@ -522,7 +561,7 @@ class HealthcareHelperAgent(Agent):
     async def cancel_appointment(self, context: RunContext) -> dict[str, Any]:
         """Cancel the caller's upcoming appointment. Use when they want to cancel."""
         self._filler(context, "Okay, let me take care of that cancellation.")
-        cancelled = await repository.cancel_appointment(patient_key=self.patient_key)
+        cancelled = await self._timed("cancel_appointment", repository.cancel_appointment(patient_key=self.patient_key))
         if not cancelled:
             return {"status": "none_found", "message": "No upcoming appointment to cancel."}
         cancelled["scheduled_at_friendly"] = _friendly_dt(cancelled["scheduled_at"])
@@ -691,6 +730,32 @@ def _make_session() -> AgentSession:
             preemptive_generation=PreemptiveGenerationOptions(enabled=True, preemptive_tts=True),
         ),
     )
+
+
+def _register_metrics_logging(session: AgentSession) -> None:
+    """Log per-step latency for every turn: STT, end-of-turn, LLM (time-to-first-
+    token + total), and TTS (time-to-first-byte + total). Makes it easy to see
+    exactly where time goes on each response."""
+    from livekit.agents.metrics import EOUMetrics, LLMMetrics, STTMetrics, TTSMetrics
+
+    @session.on("metrics_collected")
+    def _on_metrics(ev: Any) -> None:  # noqa: ANN001
+        m = getattr(ev, "metrics", ev)
+        try:
+            if isinstance(m, STTMetrics):
+                log.info("⏱ STT   | transcribe=%.0fms audio=%.1fs", (m.duration or 0) * 1000, m.audio_duration or 0)
+            elif isinstance(m, EOUMetrics):
+                log.info("⏱ EOU   | end-of-turn wait=%.0fms transcript_delay=%.0fms",
+                         (getattr(m, "end_of_utterance_delay", 0) or 0) * 1000,
+                         (getattr(m, "transcription_delay", 0) or 0) * 1000)
+            elif isinstance(m, LLMMetrics):
+                log.info("⏱ LLM   | ttft=%.0fms total=%.0fms tokens=%d (%.0f tok/s)",
+                         (m.ttft or 0) * 1000, (m.duration or 0) * 1000, m.total_tokens or 0, m.tokens_per_second or 0)
+            elif isinstance(m, TTSMetrics):
+                log.info("⏱ TTS   | ttfb=%.0fms synth=%.0fms audio=%.1fs",
+                         (m.ttfb or 0) * 1000, (m.duration or 0) * 1000, m.audio_duration or 0)
+        except Exception:
+            log.debug("metrics log failed", exc_info=True)
 
 
 def _register_call_end_summary(
@@ -948,6 +1013,7 @@ async def entrypoint(ctx: agents.JobContext) -> None:
     log.info("starting healthcare helper agent room=%s call_type=%s", ctx.room.name, call_type)
 
     session = _make_session()
+    _register_metrics_logging(session)
 
     if call_type == "dashboard_outbound":
         await _run_dashboard_outbound_call(ctx, session, metadata)

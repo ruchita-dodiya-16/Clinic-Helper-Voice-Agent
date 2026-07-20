@@ -109,7 +109,6 @@
           <span>Live · Updated <span id="lastUpdated">—</span></span>
         </div>
         <button class="btn btn-primary" id="refreshBtn">⟳ Refresh</button>
-        <a href="/call" style="text-decoration: none;"><button class="btn btn-outline">→ Make a call</button></a>
       </div>
     </div>
 
@@ -275,29 +274,6 @@
       </div>
     </div>
 
-    <!-- VIEW: CASES -->
-    <div class="view" id="view-cases">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Cases</div>
-          <div class="panel-subtitle">Patient health issues and treatments</div>
-        </div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Health Issue</th>
-              <th>Doctor</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="casesTable"></tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- VIEW: DOCTORS -->
     <div class="view" id="view-doctors">
       <div class="panel">
@@ -418,7 +394,6 @@
     const NAV_ITEMS = [
       { id: 'overview', label: 'Overview' },
       { id: 'patients', label: 'Patients' },
-      { id: 'cases', label: 'Cases' },
       { id: 'doctors', label: 'Doctors' },
       { id: 'appointments', label: 'Appointments' },
       { id: 'outbound', label: 'Outbound Calls' },
@@ -437,11 +412,39 @@
     let activeCall = null;
     let callStatusPoller = null;
     let CONFIG = { test_patient_phone: '' };
+    let patientsByKey = {};  // patient_key -> {name, phone_number} from /api/patients
 
-    // The patient phone number is always sourced from the .env (TEST_PATIENT_PHONE),
-    // never from the DB — so changing it in one place updates the whole UI.
+    // Fallback phone (env test number) when a record has none.
     function displayPhone() {
       return CONFIG.test_patient_phone || '—';
+    }
+
+    // The real phone for a patient: their saved number, else their key if it's a
+    // phone number, else the call's own number, else the env fallback.
+    function phoneFor(key, fallback) {
+      const p = patientsByKey[key];
+      if (p && p.phone_number) return p.phone_number;
+      if (key && key.startsWith('+')) return key;
+      return fallback || displayPhone();
+    }
+
+    // The patient's real (saved) name, or '' if we don't know it yet.
+    function nameFor(key) {
+      const p = patientsByKey[key];
+      const n = p && p.name ? p.name.trim() : '';
+      return (n && n !== key) ? n : '';
+    }
+
+    // Renders the Patient cell: name on top + phone number underneath. If we
+    // don't know the name yet (new caller who hasn't given it), show the number.
+    function patientCell(key, fallbackPhone, clickable) {
+      const name = nameFor(key);
+      const phone = phoneFor(key, fallbackPhone);
+      const onclick = clickable ? ` onclick="showPatientDetail('${key}')" style="cursor:pointer;"` : '';
+      if (name) {
+        return `<span class="patient-name"${onclick}>${name}</span><div class="patient-sub">${phone}</div>`;
+      }
+      return `<span class="patient-name"${onclick}>${phone}</span>`;
     }
 
     function showTab(tabId) {
@@ -582,17 +585,24 @@
 
     async function loadData() {
       try {
-        const [summary, tasks, calls, doctors, appointments, retention, cfg] = await Promise.all([
+        const [summary, tasks, calls, doctors, appointments, retention, cfg, patients] = await Promise.all([
           fetch('/api/dashboard').then(r => r.json()),
           fetch('/api/tasks').then(r => r.json()),
           fetch('/api/call-log').then(r => r.json()),
           fetch('/api/doctors').then(r => r.json()),
           fetch('/api/appointments').then(r => r.json()),
           fetch('/api/retention-queue').then(r => r.json()),
-          fetch('/api/config').then(r => r.json()).catch(() => ({ test_patient_phone: '' }))
+          fetch('/api/config').then(r => r.json()).catch(() => ({ test_patient_phone: '' })),
+          fetch('/api/patients').then(r => r.json()).catch(() => ({ patients: [] }))
         ]);
 
         CONFIG = cfg || CONFIG;
+
+        // Build key -> {name, phone} so tables can show the real saved name.
+        patientsByKey = {};
+        (patients.patients || []).forEach(p => {
+          patientsByKey[p.patient_key] = { name: p.name || '', phone_number: p.phone_number || '' };
+        });
 
         allCases = tasks.tasks || [];
         allCalls = calls.calls || [];
@@ -630,7 +640,6 @@
         renderTodaysCalls(todaysCalls);
         renderPatientsList();
         renderNewPatients();
-        renderCases();
         renderDoctors();
         renderAppointments();
         renderOutbound();
@@ -649,8 +658,8 @@
       }
       tbody.innerHTML = calls.map(c => `
         <tr>
-          <td>${c.patient_key || 'Unknown'}</td>
-          <td>${displayPhone()}</td>
+          <td>${patientCell(c.patient_key, c.phone_number, true)}</td>
+          <td>${phoneFor(c.patient_key, c.phone_number)}</td>
           <td>${c.call_type || '—'}</td>
           <td>${badge(c.direction, c.direction)}</td>
           <td>${timeAgo(c.started_at)}</td>
@@ -668,8 +677,8 @@
       }
       tbody.innerHTML = allPatients.map(p => `
         <tr onclick="showPatientDetail('${p.patient_key}')" style="cursor: pointer;">
-          <td class="patient-name">${p.patient_name || p.patient_key}</td>
-          <td>${displayPhone()}</td>
+          <td>${patientCell(p.patient_key, p.phone_number, false)}</td>
+          <td>${phoneFor(p.patient_key, p.phone_number)}</td>
           <td><strong>${p.latest_issue || '—'}</strong></td>
           <td>${p.latest_doctor || '—'}</td>
           <td>${p.last_case_date}</td>
@@ -699,15 +708,16 @@
         const patientCases = allCases.filter(c => c.patient_key === call.patient_key && ['appointment', 'escalation'].includes(c.case_type));
         const healthIssue = patientCases.length > 0 ? (patientCases[0].details?.health_issue || '—') : '—';
         const doctor = patientCases.length > 0 ? (patientCases[0].details?.doctor_name || '—') : '—';
-        const patientName = call.patient_key || 'Unknown';
+        const callName = nameFor(call.patient_key) || phoneFor(call.patient_key, call.phone_number);
+        const callPhone = phoneFor(call.patient_key, call.phone_number);
         return `
         <tr>
-          <td><span class="patient-name" onclick="showPatientDetail('${call.patient_key}')">${patientName}</span></td>
-          <td>${displayPhone()}</td>
+          <td>${patientCell(call.patient_key, call.phone_number, true)}</td>
+          <td>${callPhone}</td>
           <td>${healthIssue}</td>
           <td>${doctor}</td>
           <td>${new Date(call.started_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${patientName.replace(/'/g, "\\'")}', '${call.patient_key}')" title="Call patient">📞</span></td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall('${callPhone}', '${callName.replace(/'/g, "\\'")}', '${call.patient_key}')" title="Call patient">📞</span></td>
         </tr>
       `;
       }).join('');
@@ -721,16 +731,22 @@
 
     function renderPatientDetail() {
       if (!selectedPatientKey) return;
-      const patient = allPatients.find(p => p.patient_key === selectedPatientKey);
-      if (!patient) return;
+      // Fall back to the patients map (e.g. a new inbound caller with no case yet).
+      let patient = allPatients.find(p => p.patient_key === selectedPatientKey);
+      if (!patient) {
+        const rec = patientsByKey[selectedPatientKey] || {};
+        patient = { patient_key: selectedPatientKey, patient_name: rec.name || '', phone_number: rec.phone_number || '' };
+      }
       const patientCalls = allCalls.filter(c => c.patient_key === selectedPatientKey);
       const patientCases = allCases.filter(c => c.patient_key === selectedPatientKey && ['appointment', 'escalation'].includes(c.case_type));
 
-      document.getElementById('modalPatientName').textContent = patient.patient_name || patient.patient_key;
-      document.getElementById('modalPatientInfo').textContent = displayPhone() + ' • ' + patient.patient_key;
+      const pName = nameFor(patient.patient_key) || patient.patient_name || '';
+      const pPhone = phoneFor(patient.patient_key, patient.phone_number);
+      document.getElementById('modalPatientName').textContent = pName || pPhone;
+      document.getElementById('modalPatientInfo').textContent = pPhone + ' • ' + patient.patient_key;
       document.getElementById('modalPatientBasicInfo').innerHTML = `
-        <div><strong>Name:</strong> ${patient.patient_name || 'Unknown'}</div>
-        <div style="margin-top: 8px;"><strong>Phone:</strong> ${displayPhone()}</div>
+        <div><strong>Name:</strong> ${pName || 'Not provided yet'}</div>
+        <div style="margin-top: 8px;"><strong>Phone:</strong> ${pPhone}</div>
         <div style="margin-top: 8px;"><strong>Patient ID:</strong> ${patient.patient_key}</div>
         <div style="margin-top: 8px;"><strong>Status:</strong> <span style="color: var(--success); font-weight: 600;">Active</span></div>
       `;
@@ -760,21 +776,6 @@
           <td>${new Date(c.started_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
           <td>${formatDuration(c.duration_seconds)}</td>
           <td>${badge(c.outcome === 'answered' ? 'answered' : 'new', (c.outcome || 'unknown').replace(/_/g, ' '))}</td>
-        </tr>
-      `).join('');
-    }
-
-    function renderCases() {
-      const tbody = document.getElementById('casesTable');
-      const clinicalCases = allCases.filter(c => ['appointment', 'escalation'].includes(c.case_type));
-      tbody.innerHTML = !clinicalCases.length ? '<tr><td colspan="6" class="empty">No cases</td></tr>' : clinicalCases.map(c => `
-        <tr>
-          <td>${c.patient_name || c.patient_key}</td>
-          <td><strong>${c.details?.health_issue || c.title || '—'}</strong></td>
-          <td>${c.details?.doctor_name || '—'}</td>
-          <td>${badge(c.priority === 'urgent' ? 'urgent' : 'new', (c.priority || 'normal').toUpperCase())}</td>
-          <td>${badge('new', (c.status || 'new').toUpperCase())}</td>
-          <td>${timeAgo(c.created_at)}</td>
         </tr>
       `).join('');
     }
@@ -818,15 +819,17 @@
         } else {
           statusBadge = badge('new', (r.retention_status || 'pending').toUpperCase());
         }
+        const rName = nameFor(r.patient_key) || r.name || phoneFor(r.patient_key, r.phone_number);
+        const rPhone = phoneFor(r.patient_key, r.phone_number);
         return `
         <tr>
-          <td><span class="patient-name" onclick="showPatientDetail('${r.patient_key}')">${r.name || r.patient_key}</span></td>
-          <td>${displayPhone()}</td>
+          <td>${patientCell(r.patient_key, r.phone_number, true)}</td>
+          <td>${rPhone}</td>
           <td>${healthIssue}</td>
           <td>${doctor}</td>
           <td>${r.retention_reason || '—'}</td>
           <td>${statusBadge}</td>
-          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${(r.name || r.patient_key).replace(/'/g, "\\'")}', '${r.patient_key}', '${(r.retention_reason || '').replace(/'/g, "\\'")}')" title="Call patient">📞</span></td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall('${rPhone}', '${rName.replace(/'/g, "\\'")}', '${r.patient_key}', '${(r.retention_reason || '').replace(/'/g, "\\'")}')" title="Call patient">📞</span></td>
         </tr>
       `;
       }).join('');
@@ -851,10 +854,12 @@
         const patientCases = allCases.filter(cse => cse.patient_key === c.patient_key && ['appointment', 'escalation'].includes(cse.case_type));
         const healthIssue = patientCases.length > 0 ? (patientCases[0].details?.health_issue || '—') : '—';
         const doctor = patientCases.length > 0 ? (patientCases[0].details?.doctor_name || '—') : '—';
+        const cName = nameFor(c.patient_key) || phoneFor(c.patient_key, c.phone_number);
+        const cPhone = phoneFor(c.patient_key, c.phone_number);
         return `
         <tr>
-          <td><span class="patient-name" onclick="showPatientDetail('${c.patient_key}')">${c.patient_key || 'Unknown'}</span></td>
-          <td>${displayPhone()}</td>
+          <td>${patientCell(c.patient_key, c.phone_number, true)}</td>
+          <td>${cPhone}</td>
           <td>${healthIssue}</td>
           <td>${doctor}</td>
           <td>${c.call_type || '—'}</td>
@@ -862,7 +867,7 @@
           <td>${timeAgo(c.started_at)}</td>
           <td>${formatDuration(c.duration_seconds)}</td>
           <td>${badge(c.outcome, (c.outcome || 'unknown').replace(/_/g, ' '))}</td>
-          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall(displayPhone(), '${(c.patient_key || 'Patient').replace(/'/g, "\\'")}', '${c.patient_key}')" title="Call patient">📞</span></td>
+          <td style="text-align: center;"><span class="call-icon" onclick="initiateCall('${cPhone}', '${cName.replace(/'/g, "\\'")}', '${c.patient_key}')" title="Call patient">📞</span></td>
         </tr>
       `;
       }).join('');
